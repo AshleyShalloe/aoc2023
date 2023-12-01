@@ -35,6 +35,8 @@ function  addHomeLink(){
     var homeLink = document.createElement("div")
     homeLink.id = "homeLink"
     homeLink.innerHTML = "<a href='https://ashe.org.uk/aoc2023'>[Home]</a>"
+    homeLink.innerHTML += "<a href='https://github.com/AshleyShalloe/aoc2023'>[Repo]</a>"
+    homeLink.innerHTML += "<a href='https://adventofcode.com/' target='_blank'>[AOC]</a>"
     document.body.prepend(homeLink)
 }
 
