@@ -1,5 +1,7 @@
 html {
     font-family: monospace;
+    max-width: 500px;
+    margin: 0 auto;
 }
 
 body {
@@ -8,12 +10,12 @@ body {
     font-family: "Source Code Pro", monospace;
     font-weight: 300;
     font-size: 14pt;
-    min-width: 60em;
     display: flex;
     flex-direction: column;
     align-items: center;
     align-content: center;
     justify-content: center;
+    margin: 20px;
 }
 
 input {
