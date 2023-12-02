@@ -14,6 +14,8 @@
 
     <h2>You can be replaced</h2>
     <input id="fancyAnswer1" disabled></input>
+    <h2>By the power of greySkull()</h2>
+    <input id="fancyAnswer2" disabled></input>
 
 </body>
 <script>
@@ -200,12 +202,56 @@ Game 100: 7 blue, 9 green, 2 red; 5 red, 9 green; 1 blue, 8 red, 13 green`
         return possibleGamesArray
     }
 
-    function solvePuzzle(){
+    function minCubePower() {
+        var minCubePowerObj = {}
+
+        for (var game in parsedGameData) {
+            var trialArray = parsedGameData[game]
+            var maxRedSum = 0
+            var maxGreenSum = 0
+            var maxBlueSum = 0
+
+            for (var i = 0; i < trialArray.length; i++) {
+                var trial = trialArray[i]
+                var tempRedSum = 0
+                var tempGreenSum = 0
+                var tempBlueSum = 0
+                for (var j = 0; j < trial.length; j++) {
+                    var trialColour = trial[j][0]
+                    var trialCount = trial[j][1]
+
+                    if (trialColour == "red") {
+                        tempRedSum += trialCount
+                    }
+                    else if (trialColour == "green") {
+                        tempGreenSum += trialCount
+                    }
+                    else if (trialColour == "blue") {
+                        tempBlueSum += trialCount
+                    }
+                }
+                maxRedSum = tempRedSum > maxRedSum ? tempRedSum : maxRedSum
+                maxGreenSum = tempGreenSum > maxGreenSum ? tempGreenSum : maxGreenSum
+                maxBlueSum = tempBlueSum > maxBlueSum ? tempBlueSum : maxBlueSum
+            }
+
+            minCubePowerObj[game] = maxRedSum * maxGreenSum * maxBlueSum
+        }
+
+        return minCubePowerObj
+    }
+
+    function solvePuzzle() {
         return possibleGames(12, 13, 14).reduce((x, y) => x + y, 0)
     }
 
-    function init(){
+    function solvePuzzlePt2() {
+        return Object.values(minCubePower()).reduce((x, y) => x + y, 0)
+    }
+
+    function init() {
         document.getElementById("fancyAnswer1").value = solvePuzzle().toString()
+        document.getElementById("fancyAnswer2").value = solvePuzzlePt2().toString()
     }
 
     // globals
