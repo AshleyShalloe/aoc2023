@@ -239,7 +239,7 @@
                     return true
                 }
             }
-            if ((rowIdx < parsedEngineSchematic.length - 1) && (currentIdx == endIdx) && (currentIdx < parsedEngineSchematic[rowIdx].length - 1)){
+            if ((rowIdx < parsedEngineSchematic.length - 1) && (currentIdx == endIdx) && (currentIdx < parsedEngineSchematic[rowIdx].length - 1)) {
                 // check SE
                 x = currentIdx + 1
                 y = rowIdx + 1
@@ -313,7 +313,7 @@
                     gearCoordsArray.push([x, y])
                 }
             }
-            if ((rowIdx < parsedEngineSchematic.length - 1) && (currentIdx == endIdx) && (currentIdx < parsedEngineSchematic[rowIdx].length - 1)){
+            if ((rowIdx < parsedEngineSchematic.length - 1) && (currentIdx == endIdx) && (currentIdx < parsedEngineSchematic[rowIdx].length - 1)) {
                 // check SE
                 x = currentIdx + 1
                 y = rowIdx + 1
@@ -373,6 +373,30 @@
         return numberToGearCoordsRecords
     }
 
+    function getGearsAndTheirAdjacentNumbers() {
+        var gearAndNumberObj = {}
+
+        var numberToGearCoordsRecords = getNumberToGearCoordsRecords().filter(x =>
+            x[1].length
+        ).map(x =>
+            [x[0], x[1][0]]
+        )
+
+        for (var i = 0; i < numberToGearCoordsRecords.length; i++) {
+            var record = numberToGearCoordsRecords[i]
+            var gearXY = `${record[1][0]},${record[1][1]}`
+            var number = record[0]
+            if (gearAndNumberObj[gearXY]) {
+                gearAndNumberObj[gearXY] = gearAndNumberObj[gearXY].concat(number)
+            }
+            else {
+                gearAndNumberObj[gearXY] = [number]
+            }
+        }
+
+        return gearAndNumberObj
+    }
+
     function solvePuzzle() {
         var validNumbers = validateNumberRecords().filter(x => x[1]).map(x => x[0])
 
@@ -380,12 +404,17 @@
     }
 
     function solvePuzzlePt2() {
+        var validGears = Object.values(getGearsAndTheirAdjacentNumbers()).filter(x =>
+            x.length == 2
+        )
+        var gearRatiosArray = validGears.map(x => x[0] * x[1])
 
+        return gearRatiosArray.reduce((x, y) => x + y, 0)
     }
 
     function init() {
         document.getElementById("fancyAnswer1").value = solvePuzzle().toString()
-        // document.getElementById("fancyAnswer2").value = solvePuzzlePt2().toString()
+        document.getElementById("fancyAnswer2").value = solvePuzzlePt2().toString()
     }
 
     // globals
