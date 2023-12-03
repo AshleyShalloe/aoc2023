@@ -12,9 +12,9 @@
 
 <body>
 
-    <h2>1</h2>
+    <h2>Numbers and symbols are touching</h2>
     <input id="fancyAnswer1" disabled></input>
-    <h2>2</h2>
+    <h2>Gear up</h2>
     <input id="fancyAnswer2" disabled></input>
 
 </body>
@@ -162,88 +162,88 @@
 .....934....*339...829....495.....682...*.............*....+..........*..794..........-430...*....&........848..367....+............*....505
 .........175..........................381............270....198......911...................52......642...............45............445......`
 
-    function getListOfNumbers(){
+    function getListOfNumbers() {
         var numberArray = engineSchematic.replace(/\D/g, ".")
-        while (numberArray.includes("..")){
+        while (numberArray.includes("..")) {
             numberArray = numberArray.replaceAll("..", ".")
         }
         numberArray = numberArray.split(".").filter(x => parseInt(x)).map(x => parseInt(x))
         return numberArray
     }
 
-    function isSymbol(inputChar){
-        if (inputChar.length > 1){
+    function isSymbol(inputChar) {
+        if (inputChar.length > 1) {
             throw new Error("Single chars only")
         }
         return inputChar.toString().replace(/[A-Za-z0-9]/, "").replace(".", "").length
     }
 
-    function checkNSEWForSymbols(rowIdx, startIdx, endIdx){
+    function checkNSEWForSymbols(rowIdx, startIdx, endIdx) {
         var x
         var y
-        
-        for (var currentIdx=startIdx; currentIdx<=endIdx; currentIdx++){
-            if (rowIdx){
+
+        for (var currentIdx = startIdx; currentIdx <= endIdx; currentIdx++) {
+            if (rowIdx) {
                 // check north
                 x = currentIdx
                 y = rowIdx - 1
-                if (isSymbol(parsedEngineSchematic[y][x])){
+                if (isSymbol(parsedEngineSchematic[y][x])) {
                     return true
                 }
             }
-            if (currentIdx < parsedEngineSchematic[rowIdx].length - 1){
+            if ((currentIdx < parsedEngineSchematic[rowIdx].length - 1) && (currentIdx == endIdx)) {
                 // check east
                 x = currentIdx + 1
                 y = rowIdx
-                if (isSymbol(parsedEngineSchematic[y][x])){
+                if (isSymbol(parsedEngineSchematic[y][x])) {
                     return true
                 }
             }
-            if (currentIdx){
+            if (currentIdx && (currentIdx == startIdx)) {
                 // check west
                 x = currentIdx - 1
                 y = rowIdx
-                if (isSymbol(parsedEngineSchematic[y][x])){
+                if (isSymbol(parsedEngineSchematic[y][x])) {
                     return true
                 }
             }
-            if (rowIdx < parsedEngineSchematic.length - 1){
+            if (rowIdx < parsedEngineSchematic.length - 1) {
                 // check south
                 x = currentIdx
                 y = rowIdx + 1
-                if (isSymbol(parsedEngineSchematic[y][x])){
+                if (isSymbol(parsedEngineSchematic[y][x])) {
                     return true
                 }
             }
-            if (rowIdx && currentIdx){
+            if (rowIdx && currentIdx && (currentIdx == startIdx)) {
                 // check NW
                 x = currentIdx - 1
                 y = rowIdx - 1
-                if (isSymbol(parsedEngineSchematic[y][x])){
+                if (isSymbol(parsedEngineSchematic[y][x])) {
                     return true
                 }
             }
-            if (rowIdx &&  (currentIdx < parsedEngineSchematic[rowIdx].length - 1)){
+            if (rowIdx && (currentIdx < parsedEngineSchematic[rowIdx].length - 1) && (currentIdx == endIdx)) {
                 // check NE
                 x = currentIdx + 1
                 y = rowIdx - 1
-                if (isSymbol(parsedEngineSchematic[y][x])){
+                if (isSymbol(parsedEngineSchematic[y][x])) {
                     return true
                 }
             }
-            if ((rowIdx < parsedEngineSchematic.length - 1) && currentIdx){
+            if ((rowIdx < parsedEngineSchematic.length - 1) && currentIdx && (currentIdx == startIdx)) {
                 // check SW
                 x = currentIdx - 1
                 y = rowIdx + 1
-                if (isSymbol(parsedEngineSchematic[y][x])){
+                if (isSymbol(parsedEngineSchematic[y][x])) {
                     return true
                 }
             }
-            if ((rowIdx < parsedEngineSchematic.length - 1) && (currentIdx < parsedEngineSchematic[rowIdx].length - 1)){
+            if ((rowIdx < parsedEngineSchematic.length - 1) && (currentIdx == endIdx) && (currentIdx < parsedEngineSchematic[rowIdx].length - 1)){
                 // check SE
                 x = currentIdx + 1
                 y = rowIdx + 1
-                if (isSymbol(parsedEngineSchematic[y][x])){
+                if (isSymbol(parsedEngineSchematic[y][x])) {
                     return true
                 }
             }
@@ -251,12 +251,86 @@
         return false
     }
 
-    function validateNumberRecords(){
+    function checkNSEWForGears(rowIdx, startIdx, endIdx) {
+        var x
+        var y
+        var gearCoordsArray = []
+
+        for (var currentIdx = startIdx; currentIdx <= endIdx; currentIdx++) {
+            if (rowIdx) {
+                // check north
+                x = currentIdx
+                y = rowIdx - 1
+                if (parsedEngineSchematic[y][x] == "*") {
+                    gearCoordsArray.push([x, y])
+                }
+            }
+            if ((currentIdx < parsedEngineSchematic[rowIdx].length - 1) && (currentIdx == endIdx)) {
+                // check east
+                x = currentIdx + 1
+                y = rowIdx
+                if (parsedEngineSchematic[y][x] == "*") {
+                    gearCoordsArray.push([x, y])
+                }
+            }
+            if (currentIdx && (currentIdx == startIdx)) {
+                // check west
+                x = currentIdx - 1
+                y = rowIdx
+                if (parsedEngineSchematic[y][x] == "*") {
+                    gearCoordsArray.push([x, y])
+                }
+            }
+            if (rowIdx < parsedEngineSchematic.length - 1) {
+                // check south
+                x = currentIdx
+                y = rowIdx + 1
+                if (parsedEngineSchematic[y][x] == "*") {
+                    gearCoordsArray.push([x, y])
+                }
+            }
+            if (rowIdx && currentIdx && (currentIdx == startIdx)) {
+                // check NW
+                x = currentIdx - 1
+                y = rowIdx - 1
+                if (parsedEngineSchematic[y][x] == "*") {
+                    gearCoordsArray.push([x, y])
+                }
+            }
+            if (rowIdx && (currentIdx < parsedEngineSchematic[rowIdx].length - 1) && (currentIdx == endIdx)) {
+                // check NE
+                x = currentIdx + 1
+                y = rowIdx - 1
+                if (parsedEngineSchematic[y][x] == "*") {
+                    gearCoordsArray.push([x, y])
+                }
+            }
+            if ((rowIdx < parsedEngineSchematic.length - 1) && currentIdx && (currentIdx == startIdx)) {
+                // check SW
+                x = currentIdx - 1
+                y = rowIdx + 1
+                if (parsedEngineSchematic[y][x] == "*") {
+                    gearCoordsArray.push([x, y])
+                }
+            }
+            if ((rowIdx < parsedEngineSchematic.length - 1) && (currentIdx == endIdx) && (currentIdx < parsedEngineSchematic[rowIdx].length - 1)){
+                // check SE
+                x = currentIdx + 1
+                y = rowIdx + 1
+                if (parsedEngineSchematic[y][x] == "*") {
+                    gearCoordsArray.push([x, y])
+                }
+            }
+        }
+        return gearCoordsArray
+    }
+
+    function validateNumberRecords() {
         var listOfNumbers = getListOfNumbers()
         var tempSchematic = engineSchematic.replaceAll("\n", "")
         var validatedNumberRecords = []
 
-        for (var i=0; i<listOfNumbers.length; i++){
+        for (var i = 0; i < listOfNumbers.length; i++) {
             var numString = listOfNumbers[i].toString()
             var start = tempSchematic.indexOf(numString)
             var end = start + numString.length - 1
@@ -275,6 +349,30 @@
         return validatedNumberRecords
     }
 
+    function getNumberToGearCoordsRecords() {
+        var listOfNumbers = getListOfNumbers()
+        var tempSchematic = engineSchematic.replaceAll("\n", "")
+        var numberToGearCoordsRecords = []
+
+        for (var i = 0; i < listOfNumbers.length; i++) {
+            var numString = listOfNumbers[i].toString()
+            var start = tempSchematic.indexOf(numString)
+            var end = start + numString.length - 1
+            var row = Math.floor(start / parsedEngineSchematic[0].length)
+
+            start = start % parsedEngineSchematic[0].length
+            end = end % parsedEngineSchematic[0].length
+
+            numberToGearCoordsRecords.push([
+                listOfNumbers[i],
+                checkNSEWForGears(row, start, end)
+            ])
+
+            tempSchematic = tempSchematic.replace(numString, ".".repeat(numString.length))
+        }
+        return numberToGearCoordsRecords
+    }
+
     function solvePuzzle() {
         var validNumbers = validateNumberRecords().filter(x => x[1]).map(x => x[0])
 
@@ -282,7 +380,7 @@
     }
 
     function solvePuzzlePt2() {
-        
+
     }
 
     function init() {
