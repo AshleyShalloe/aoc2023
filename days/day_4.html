@@ -14,7 +14,7 @@
 
     <h2>The moral is gambling pays off</h2>
     <input id="fancyAnswer1" disabled></input>
-    <h2>2</h2>
+    <h2>Abject refusal to recurse</h2>
     <input id="fancyAnswer2" disabled></input>
 
 </body>
@@ -229,16 +229,16 @@ Card 205: 85 47  9 91 79 52 28 26 19 33 | 61 75 46 17 16 34 98  3 62 56 74 54 88
 Card 206: 80 39 46 82 49 98 73 32 85 15 | 90 60 47 54 59 41 20 33 92 11 88 61 99 84 94 78 71 35 55  2 51 40 67 18 66`
 
     function parseCards(inputCardData) {
-        var returnRecords = inputCardData.replaceAll("  ", " ").split("\n").map(x =>
+        var returnRecords = inputCardData.replace(/  */g, " ").split("\n").map(x =>
             [
-                x.split(":")[0], 
-                x.split(":")[1].split("|")[0].trim().split(" "), 
+                parseInt(x.split(":")[0].split(" ")[1]),
+                x.split(":")[1].split("|")[0].trim().split(" "),
                 x.split(":")[1].split("|")[1].trim().split(" ")
             ]
         ).map(x =>
             [
-                x[0], 
-                x[1].map(y => parseInt(y)), 
+                x[0],
+                x[1].map(y => parseInt(y)),
                 x[2].map(z => parseInt(z))
             ]
         )
@@ -246,9 +246,9 @@ Card 206: 80 39 46 82 49 98 73 32 85 15 | 90 60 47 54 59 41 20 33 92 11 88 61 99
         return returnRecords
     }
 
-    function getWinningNumberCount(){
+    function getWinningNumberCount() {
         var returnObj = {}
-        
+
         parsedCards.forEach(x => {
             returnObj[x[0]] = x[2].filter(y => x[1].includes(y)).length
         });
@@ -256,23 +256,64 @@ Card 206: 80 39 46 82 49 98 73 32 85 15 | 90 60 47 54 59 41 20 33 92 11 88 61 99
         return returnObj
     }
 
-    function getTotalScore(){
+    function getTotalScore() {
         var winningNumberCount = [...Object.values(getWinningNumberCount())]
         var scores = winningNumberCount.filter(x =>
             x
         ).map(x =>
-            2**(x-1)
+            2 ** (x - 1)
         )
 
         return scores
     }
+
+    function range(size, startAt = 0) {
+        return [...Array(size).keys()].map(i => i + startAt);
+    }
+
+    function getCardsWon(numberOfWinningNumbers, indexOfCurrentCard){
+        var cardsBelow = range(numberOfWinningNumbers, indexOfCurrentCard+1)
+        return cardsBelow
+    }
+
+    function getCardsWonByEachUniqueGame() {
+        var winningNumberCount = getWinningNumberCount()
+        var cardCopies = {}
+
+        // get the cards won by each unique game
+        for (var cardIdxStr in winningNumberCount) {
+            var cardIdx = parseInt(cardIdxStr)
+            var winNumCount = winningNumberCount[cardIdxStr]
+            cardCopies[cardIdx] = getCardsWon(winNumCount, cardIdx)
+        }
+
+        return cardCopies
+    }
+
+    function totalCopies(){
+        // iterate through the cards in reverse order
+        // embed the preceeding cards into the current card
+        var cardsWon = getCardsWonByEachUniqueGame()
+        var cardsIdxReverseArray = [...Object.keys(cardsWon)].reverse()
+        var returnObj = {}
+        for (var i=0; i<cardsIdxReverseArray.length; i++){
+            var cirA = cardsIdxReverseArray[i]
+            var cirAval = cardsWon[cirA]
+            returnObj[cirA] = cirAval.map(x => returnObj[x])
+        }
+
+        return returnObj
+    }
+
 
     function solvePuzzle() {
         return getTotalScore().reduce((x, y) => x + y, 0)
     }
 
     function solvePuzzlePt2() {
-        return 0
+        // the total number of cards is the total number of left square brackets
+        // this is stupid, but it works, so is it really stupid? (yes)
+        return JSON.stringify(totalCopies()).split("").filter(x => x == "[").length
     }
 
     function init() {
