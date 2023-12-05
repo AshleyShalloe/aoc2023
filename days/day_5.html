@@ -351,7 +351,7 @@ humidity-to-location map:
         for (var i = 0; i < seeds.length; i++) {
             locationNumbers.push(unweaveBasketCase(seeds[i])["location"])
         }
-        return locationNumbers.sort().slice(0, 1)
+        return Math.min(...locationNumbers)
     }
 
     function sumArray(inputArray) {
