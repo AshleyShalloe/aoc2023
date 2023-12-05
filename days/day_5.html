@@ -15,8 +15,7 @@
     <h2>1</h2>
     <input id="fancyAnswer1" disabled></input>
     <h2>2</h2>
-    <input id="fancyAnswer2" disabled></input>
-
+    <input style="width: 600px" id="fancyAnswer2" disabled value="lol"></input>
 </body>
 <script>
     'use strict'
@@ -335,14 +334,53 @@ humidity-to-location map:
 
         return {
             "seed": seedNumber,
-            "soil": seedToSoil, 
-            "fertilizer": soilToFertilizer, 
+            "soil": seedToSoil,
+            "fertilizer": soilToFertilizer,
             "water": fertilizerToWater,
-            "light": waterToLight, 
-            "temperature": lightToTemperature, 
-            "humidity": temperatureToHumidity, 
+            "light": waterToLight,
+            "temperature": lightToTemperature,
+            "humidity": temperatureToHumidity,
             "location": humidityToLocation
         }
+    }
+
+    function getSeedRanges() {
+        var seeds = parsedThingy["seeds"]
+        var seedRanges = []
+        for (var i = 0; i < seeds.length; i += 2) {
+            seedRanges.push([seeds[i], seeds[i + 1]])
+        }
+
+        return seedRanges
+    }
+
+    // another naive approach that eats all the ram
+    // basically brute force
+    // don't like it
+    function checkSeedRanges() {
+        var seedRanges = getSeedRanges()
+        var lowestLocation
+        for (var i = 0; i < seedRanges.length; i++) {
+            var start = seedRanges[i][0]
+            var length = seedRanges[i][1]
+            for (var j = start; j < (start + length); j++) {
+                if (!(j % 1000000)) {
+                    console.log("Checking ranges", i+1, "of", seedRanges.length, "progress", `${(100*(j-start)/length).toFixed(2)}%`)
+                }
+                var tempVar = unweaveBasketCase(j)["location"]
+                if (!lowestLocation) {
+                    lowestLocation = tempVar
+                    console.log("new lowest", tempVar)
+                }
+                else {
+                    if (tempVar < lowestLocation) {
+                        console.log("new lowest", tempVar)
+                        lowestLocation = tempVar
+                    }
+                }
+            }
+        }
+        return lowestLocation
     }
 
     function solvePuzzle() {
@@ -354,17 +392,14 @@ humidity-to-location map:
         return Math.min(...locationNumbers)
     }
 
-    function sumArray(inputArray) {
-        return inputArray.reduce((x, y) => x + y, 0)
-    }
 
     function solvePuzzlePt2() {
-        return 0
+        return "Run checkSeedRanges() in the console and buckle up"
     }
 
     function init() {
         document.getElementById("fancyAnswer1").value = solvePuzzle().toString()
-        document.getElementById("fancyAnswer2").value = solvePuzzlePt2().toString()
+        document.getElementById("fancyAnswer2").value = solvePuzzlePt2().toString() // it's 9622622 btw
     }
 
     // globals
