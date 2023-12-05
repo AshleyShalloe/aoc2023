@@ -21,7 +21,7 @@
 <script>
     'use strict'
 
-    const almanac = `seeds: 565778304 341771914 1736484943 907429186 3928647431 87620927 311881326 149873504 1588660730 119852039 1422681143 13548942 1095049712 216743334 3671387621 186617344 3055786218 213191880 2783359478 44001797
+    var almanac = `seeds: 565778304 341771914 1736484943 907429186 3928647431 87620927 311881326 149873504 1588660730 119852039 1422681143 13548942 1095049712 216743334 3671387621 186617344 3055786218 213191880 2783359478 44001797
 
 seed-to-soil map:
 1136439539 28187015 34421000
@@ -219,7 +219,42 @@ humidity-to-location map:
 2908283971 2254169063 217036012
 0 327948845 367508399`
 
-    function parseAlamanac(){
+
+    var almanacTesting = `seeds: 79 14 55 13
+
+seed-to-soil map:
+50 98 2
+52 50 48
+
+soil-to-fertilizer map:
+0 15 37
+37 52 2
+39 0 15
+
+fertilizer-to-water map:
+49 53 8
+0 11 42
+42 0 7
+57 7 4
+
+water-to-light map:
+88 18 7
+18 25 70
+
+light-to-temperature map:
+45 77 23
+81 45 19
+68 64 13
+
+temperature-to-humidity map:
+0 69 1
+1 0 69
+
+humidity-to-location map:
+60 56 37
+56 93 4`
+
+    function parseAlamanac() {
         var parsed = almanac.split("\n\n")
         var seeds = parsed[0]
         var maps = parsed.slice(1)
@@ -231,21 +266,95 @@ humidity-to-location map:
             x.split("\n").map(y => y.split(" "))
         )
 
-        for (var i=0; i<maps.length; i++){
+        for (var i = 0; i < maps.length; i++) {
             var recordArray = maps[i]
             var mappingName = recordArray[0][0]
             var records = recordArray.slice(1).map(x => x.map(y => parseInt(y)))
             mapsObj[mappingName] = records
         }
 
-        return {"seeds": seeds, "maps": mapsObj}
+        return { "seeds": seeds, "maps": mapsObj }
+    }
+
+    function range(size, startAt = 0) {
+        return [...Array(size).keys()].map(i => i + startAt);
+    }
+
+    // // naive method that eats all the ram
+    // function mapInputNumberToOutputNumber(inputNumber, mappingArray) {
+    //     var mappingObj = {}
+
+    //     for (var i = 0; i < mappingArray.length; i++) {
+    //         var record = mappingArray[i]
+    //         var destinationRangeStart = record[0]
+    //         var sourceRangeStart = record[1]
+    //         var rangeLength = record[2]
+
+    //         var sourceRange = range(rangeLength, sourceRangeStart)
+    //         var destinationRange = range(rangeLength, destinationRangeStart)
+
+    //         for (var j = 0; j < sourceRange.length; j++) {
+    //             mappingObj[sourceRange[j]] = destinationRange[j]
+    //         }
+    //     }
+
+    //     if (mappingObj[inputNumber]) {
+    //         return mappingObj[inputNumber]
+    //     }
+    //     else {
+    //         return inputNumber
+    //     }
+    // }
+
+    function mapInputNumberToOutputNumber(inputNumber, mappingArray) {
+        for (var i = 0; i < mappingArray.length; i++) {
+            var record = mappingArray[i]
+            var destinationRangeStart = record[0]
+            var sourceRangeStart = record[1]
+            var rangeLength = record[2]
+            var isInputInRange = (inputNumber < (sourceRangeStart + rangeLength)) && (inputNumber >= sourceRangeStart)
+
+            if (isInputInRange) {
+                return (inputNumber - sourceRangeStart) + destinationRangeStart
+            }
+        }
+        // wasn't in any of the ranges
+        return inputNumber
+    }
+
+    function unweaveBasketCase(seedNumber) {
+        var seedToSoil = mapInputNumberToOutputNumber(seedNumber, parsedThingy["maps"]["seed-to-soil"])
+        var soilToFertilizer = mapInputNumberToOutputNumber(seedToSoil, parsedThingy["maps"]["soil-to-fertilizer"])
+        var fertilizerToWater = mapInputNumberToOutputNumber(soilToFertilizer, parsedThingy["maps"]["fertilizer-to-water"])
+        var waterToLight = mapInputNumberToOutputNumber(fertilizerToWater, parsedThingy["maps"]["water-to-light"])
+        var lightToTemperature = mapInputNumberToOutputNumber(waterToLight, parsedThingy["maps"]["light-to-temperature"])
+        var temperatureToHumidity = mapInputNumberToOutputNumber(lightToTemperature, parsedThingy["maps"]["temperature-to-humidity"])
+        var humidityToLocation = mapInputNumberToOutputNumber(temperatureToHumidity, parsedThingy["maps"]["humidity-to-location"])
+
+        // return humidityToLocation
+
+        return {
+            "seed": seedNumber,
+            "soil": seedToSoil, 
+            "fertilizer": soilToFertilizer, 
+            "water": fertilizerToWater,
+            "light": waterToLight, 
+            "temperature": lightToTemperature, 
+            "humidity": temperatureToHumidity, 
+            "location": humidityToLocation
+        }
     }
 
     function solvePuzzle() {
-        return 0
+        var seeds = parsedThingy["seeds"]
+        var locationNumbers = []
+        for (var i = 0; i < seeds.length; i++) {
+            locationNumbers.push(unweaveBasketCase(seeds[i])["location"])
+        }
+        return locationNumbers.sort().slice(0, 1)
     }
 
-    function sumArray(inputArray){
+    function sumArray(inputArray) {
         return inputArray.reduce((x, y) => x + y, 0)
     }
 
@@ -259,7 +368,8 @@ humidity-to-location map:
     }
 
     // globals
-    const parsedThingy  = parseAlamanac()
+    // almanac = almanacTesting
+    const parsedThingy = parseAlamanac()
 
     // init
     init();
