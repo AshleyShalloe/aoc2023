@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="../res/main.css">
+    <script type="text/javascript" src="../res/main.js"></script>
+    <title>Advent of Code // Day 6</title>
+    <link rel="icon" href="../favicon.png" />
+</head>
+
+<body>
+
+    <h2>SUVAT doesn't exist in this universe</h2>
+    <input id="fancyAnswer1" disabled></input>
+    <h2>Sort out your keming</h2>
+    <input id="fancyAnswer2" disabled></input>
+</body>
+<script>
+    'use strict'
+
+    const puzzleInput = `Time:        62     73     75     65
+Distance:   644   1023   1240   1023`
+
+    function getDistanceTravelled(holdTimeMs, raceDurationMs) {
+        if (holdTimeMs == raceDurationMs) {
+            return 0
+        }
+        if (holdTimeMs > raceDurationMs) {
+            console.error("You can't hold the button for longer than the race")
+        }
+        if (!holdTimeMs) {
+            return 0
+        }
+        else {
+            var speed = holdTimeMs
+            var timeLeft = raceDurationMs - holdTimeMs
+            var distanceTravelled = speed * timeLeft
+            return distanceTravelled
+        }
+    }
+
+    function getWaysToWin(currentRecord, raceDuration) {
+        var waysToWinCount = 0
+        for (var i = 0; i < raceDuration; i++) {
+            if (getDistanceTravelled(i, raceDuration) > currentRecord) {
+                waysToWinCount++
+            }
+        }
+        return waysToWinCount
+    }
+
+    function solvePuzzle(inputPuzzleData) {
+        var waysToWinArray = []
+        for (var i = 0; i < inputPuzzleData["timeArray"].length; i++) {
+            var time = inputPuzzleData["timeArray"][i]
+            var distance = inputPuzzleData["distanceArray"][i]
+            waysToWinArray.push(getWaysToWin(distance, time))
+        }
+        return waysToWinArray.reduce((a, b) => a * b)
+    }
+
+
+    function solvePuzzlePt2() {
+        return solvePuzzle(parsedPuzzleInputWithProperKeming)
+    }
+
+    function init() {
+        document.getElementById("fancyAnswer1").value = solvePuzzle(parsedPuzzleInput).toString()
+        document.getElementById("fancyAnswer2").value = solvePuzzlePt2().toString()
+    }
+
+    // globals
+    const parsedPuzzleInput = {
+        "timeArray": puzzleInput.split("\n")[0].split(":")[1].split(" ").map(x => parseInt(x)).filter(x => x),
+        "distanceArray": puzzleInput.split("\n")[1].split(":")[1].split(" ").map(x => parseInt(x)).filter(x => x)
+    }
+    const parsedPuzzleInputWithProperKeming = {
+        "timeArray": [parseInt(puzzleInput.split("\n")[0].split(":")[1].replaceAll(" ", ""))],
+        "distanceArray": [parseInt(puzzleInput.split("\n")[1].split(":")[1].replaceAll(" ", ""))]
+    }
+
+    // init
+    init();
+</script>
+
+</html>
