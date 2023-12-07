@@ -14,7 +14,7 @@
 
     <h2>Sort it out</h2>
     <input id="fancyAnswer1" disabled></input>
-    <h2>2</h2>
+    <h2>Bunch of jokers</h2>
     <input id="fancyAnswer2" disabled></input>
 </body>
 <script>
@@ -1040,13 +1040,14 @@ KT582 616
         return returnObj
     }
 
-    function sortCardsArray(inputCardsArray) {
+    function sortCardsArray(inputCardsArray, useJokers) {
         `
         Sorts high to low
         `
+        var cardOrderArray = useJokers ? cardOrderJokers : cardOrder
         return inputCardsArray.toSorted(function (x, y) {
-            var idxX = cardOrder.indexOf(x)
-            var idxY = cardOrder.indexOf(y)
+            var idxX = cardOrderArray.indexOf(x)
+            var idxY = cardOrderArray.indexOf(y)
             if (idxX < idxY) {
                 return -1
             }
@@ -1106,10 +1107,63 @@ KT582 616
         }
     }
 
-    function sortHandsByRankingLowToHigh(inputHandsArray) {
+    function classifyHandWithJokers(inputCardsArray) {
+        var jokerCount = inputCardsArray.filter(x => x == "J").length
+        var regularClassify = classifyHand(inputCardsArray)
+
+        if (!jokerCount) {
+            return regularClassify
+        }
+        else {
+            // five of a kind, all jokers
+            if (jokerCount == 5){
+                return 6
+            }
+            // four of a kind and full house contain 2 types of card
+            // if one of those types is a joker, we get five of a kind
+            if ((regularClassify == 5) || (regularClassify == 4)) {
+                return 6
+            }
+            // three of a kind contains either 3 jokers
+            // or 3 of something else plus 1 joker plus something else
+            // either way the result is 4 of a kind
+            if (regularClassify == 3) {
+                return 5
+            }
+            // two pair is either two jokers or two of something else
+            // if there's only 1 joker, then you get a full house (AAQQJ => AAAQQ)
+            // else there are 2 jokers and you get four of a kind (AAJJ9 => AAAA9)
+            if (regularClassify == 2) {
+                if (jokerCount == 1) {
+                    return 4
+                }
+                else {
+                    return 5
+                }
+            }
+            // with one pair you either have 2 jokers or 1 joker
+            // either way you get three of a kind
+            // JJ987 => 99987
+            // J9987 => 99987
+            if (regularClassify == 1) {
+                return 3
+            }
+            // else you've got a bunch of cards where nothing matches
+            // and the joker upgrades you to at least a one pair
+            return 1
+        }
+    }
+
+    function classifyHandWrapper(inputCardsArray, useJokers) {
+        return useJokers ? classifyHandWithJokers(inputCardsArray) : classifyHand(inputCardsArray)
+    }
+
+    function sortHandsByRankingLowToHigh(inputHandsArray, useJokers) {
+        var cardOrderArray = useJokers ? cardOrderJokers : cardOrder
+
         return inputHandsArray.toSorted(function (x, y) {
-            var rankingX = classifyHand(x)
-            var rankingY = classifyHand(y)
+            var rankingX = classifyHandWrapper(x, useJokers)
+            var rankingY = classifyHandWrapper(y, useJokers)
 
             if (rankingX < rankingY) {
                 return -1
@@ -1121,8 +1175,8 @@ KT582 616
             if (rankingX == rankingY) {
                 // pairwise compare cards
                 for (var i = 0; i < 5; i++) {
-                    var xCardRank = cardOrder.indexOf(x[i])
-                    var yCardRank = cardOrder.indexOf(y[i])
+                    var xCardRank = cardOrderArray.indexOf(x[i])
+                    var yCardRank = cardOrderArray.indexOf(y[i])
                     if (xCardRank == yCardRank) {
                         continue
                     }
@@ -1141,9 +1195,9 @@ KT582 616
         })
     }
 
-    function calculateTotalWinnings() {
+    function calculateTotalWinnings(useJokers) {
         var allHands = [...Object.values(parsedInput)].map(x => x.cards)
-        var handsSortedByRanking = sortHandsByRankingLowToHigh(allHands)
+        var handsSortedByRanking = sortHandsByRankingLowToHigh(allHands, useJokers)
         var totalWinnings = 0
 
         for (var handIdx in parsedInput) {
@@ -1163,7 +1217,7 @@ KT582 616
 
 
     function solvePuzzlePt2() {
-        return 0
+        return calculateTotalWinnings(true)
     }
 
     function init() {
@@ -1173,6 +1227,7 @@ KT582 616
 
     // globals
     const cardOrder = ["A", "K", "Q", "J", "T", "9", "8", "7", "6", "5", "4", "3", "2"]
+    const cardOrderJokers = ["A", "K", "Q", "T", "9", "8", "7", "6", "5", "4", "3", "2", "J"]
     const testing = false
     const parsedInput = parseInput(testing ? testInput : puzzleInput)
     const handRankings = {
