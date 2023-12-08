@@ -915,6 +915,15 @@ QBX = (SBH, SGR)`
     //     return counts
     // }
 
+    // https://stackoverflow.com/a/31302607
+    function gcd(a, b) {
+        return !b ? a : gcd(b, a % b);
+    }
+    function lcm(a, b) {
+        return (a * b) / gcd(a, b);
+    }
+
+
     function solvePuzzle() {
         return followInstructionsToDestinationReturnStepCount("ZZZ")
     }
@@ -925,13 +934,12 @@ QBX = (SBH, SGR)`
         // of all the cycle lengths of the start points
         var cycles = [...Object.values(getCyclesForAllStartPoints())].map(x => x["stepsToReachCycle"])
         
-        return `https://www.wolframalpha.com/input?i=LCM(${cycles})`
+        return cycles.reduce((a,b) => lcm(a,b))
     }
 
     function init() {
         document.getElementById("fancyAnswer1").value = solvePuzzle().toString()
-        var pt2Solution = solvePuzzlePt2().toString()
-        document.getElementById("fancyAnswer2").outerHTML = `<a href="${pt2Solution}">${pt2Solution}</a>` // 13129439557681
+        document.getElementById("fancyAnswer2").value = solvePuzzlePt2().toString()
     }
 
     // globals
