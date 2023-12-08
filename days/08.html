@@ -12,9 +12,9 @@
 
 <body>
 
-    <h2>1</h2>
+    <h2>A to Z</h2>
     <input id="fancyAnswer1" disabled></input>
-    <h2>2</h2>
+    <h2>Cheat</h2>
     <input id="fancyAnswer2" disabled></input>
 </body>
 <script>
@@ -782,11 +782,11 @@ QBX = (SBH, SGR)`
             networkObj[element[0]] = element.slice(1)
         });
 
-        return {"instructions": instructionsArray, "network": networkObj}
+        return { "instructions": instructionsArray, "network": networkObj }
     }
 
-    function followInstructionsToDestinationReturnStepCount(destination){
-        if (!destination){
+    function followInstructionsToDestinationReturnStepCount(destination) {
+        if (!destination) {
             console.error("No destination specified")
         }
         const instructions = parsedInput["instructions"]
@@ -796,7 +796,7 @@ QBX = (SBH, SGR)`
         var currentLocation = "AAA"
         var steps = 0
 
-        while (currentLocation != destination){
+        while (currentLocation != destination) {
             var direction = instructions[steps % instructionLength]
             currentLocation = network[currentLocation][direction == "L" ? 0 : 1]
             steps++
@@ -805,6 +805,115 @@ QBX = (SBH, SGR)`
         return steps
     }
 
+    // // naive method that haunts all the RAM
+    // function wooImAGhost(){
+    //     const instructions = parsedInput["instructions"]
+    //     const instructionLength = instructions.length
+    //     const network = parsedInput["network"]
+    //     const startPoints = [...Object.keys(network)].filter(x => x.slice(2) == "A")
+    //     const endPoints = [...Object.keys(network)].filter(x => x.slice(2) == "Z")
+
+    //     var currentLocationArray = startPoints
+    //     var steps = 0
+
+    //     while (currentLocationArray.filter(x => !endPoints.includes(x)).length){
+    //         var direction = instructions[steps % instructionLength] == "L" ? 0 : 1
+    //         currentLocationArray = currentLocationArray.map(x =>
+    //             network[x][direction]
+    //         )
+    //         steps++
+    //     }
+
+    //     return steps
+    // }
+
+    function getDistanceToNextZ(inputNode) {
+        const instructions = parsedInput["instructions"]
+        const instructionLength = instructions.length
+        const network = parsedInput["network"]
+        const endPoints = [...Object.keys(network)].filter(x => x.slice(2) == "Z")
+
+        var currentLocation = inputNode
+        var steps = 0
+        var seenLocations = new Set() // should we prepopulate with currentLocation?
+
+        // so basically, if the input node already ends with Z
+        // we give it a free pass, and find out how long it takes
+        // to cycle to the next Z rather than returning distance 0
+        // unless it really is a zero cycle
+        var freePass = false
+        if (inputNode.slice(2) == "Z") {
+            freePass = true
+        }
+
+        while (freePass || (!endPoints.includes(currentLocation))) {
+            var direction = instructions[steps % instructionLength]
+            currentLocation = network[currentLocation][direction == "L" ? 0 : 1]
+            if (seenLocations.has(currentLocation)) {
+                return false
+            }
+            else {
+                seenLocations.add(`${currentLocation}_${direction}`)
+            }
+            freePass = false
+            steps++
+        }
+
+        return [steps, currentLocation]
+    }
+
+    function distanceToNextZForEverything() {
+        `
+        Array of [startLocation, [distance, finalLocation]] records
+        Where
+            startLocation = key from network
+            distance = distance to next location ending in Z
+            finalLocation = the Z location we ended at
+        `
+        return [...Object.keys(parsedInput["network"])].map(x => [x, getDistanceToNextZ(x)])
+    }
+
+    function getCyclesForAllStartPoints() {
+        const network = parsedInput["network"]
+        const startPoints = [...Object.keys(network)].filter(x => x.slice(2) == "A")
+        const endPoints = [...Object.keys(network)].filter(x => x.slice(2) == "Z")
+        var zDistances = distanceToNextZForEverything()
+        var filteredZDistancesStarts = zDistances.filter(x => startPoints.includes(x[0]))
+        var filteredZDistancesEnds = zDistances.filter(x => endPoints.includes(x[0]))
+        var cycleObj = {}
+
+        for (var i = 0; i < filteredZDistancesStarts.length; i++) {
+            var record = filteredZDistancesStarts[i]
+            var start = record[0]
+            var stepsToReachCycle = record[1][0]
+            var endingZ = record[1][1]
+
+            // I checked and all the Z thingies point to themselves eventually,
+            // and never to another Z thingy
+            // actually, it seems like the stable cycle is always
+            // equal to the steps to reach the cycle in the first place
+            // that's weird, no?
+            var stableCycleSteps = filteredZDistancesEnds.filter(x => x[0] == endingZ)[0][1][0]
+
+            cycleObj[start] = {
+                "stepsToReachCycle": stepsToReachCycle,
+                "stableCycleSteps": stableCycleSteps
+            }
+        }
+
+        return cycleObj
+    }
+
+    // function counter(inputArray){
+    //     var counts = {}
+
+    //     for (var i=0; i<inputArray.length; i++){
+    //         var arrayItem = inputArray[i]
+    //         counts[arrayItem] = (counts[arrayItem] ? counts[arrayItem] : 0) + 1
+    //     }
+
+    //     return counts
+    // }
 
     function solvePuzzle() {
         return followInstructionsToDestinationReturnStepCount("ZZZ")
@@ -812,12 +921,17 @@ QBX = (SBH, SGR)`
 
 
     function solvePuzzlePt2() {
-        return 0
+        // so I think the solution is just the lowest common multiple
+        // of all the cycle lengths of the start points
+        var cycles = [...Object.values(getCyclesForAllStartPoints())].map(x => x["stepsToReachCycle"])
+        
+        return `https://www.wolframalpha.com/input?i=LCM(${cycles})`
     }
 
     function init() {
         document.getElementById("fancyAnswer1").value = solvePuzzle().toString()
-        document.getElementById("fancyAnswer2").value = solvePuzzlePt2().toString()
+        var pt2Solution = solvePuzzlePt2().toString()
+        document.getElementById("fancyAnswer2").outerHTML = `<a href="${pt2Solution}">${pt2Solution}</a>` // 13129439557681
     }
 
     // globals
