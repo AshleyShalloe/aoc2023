@@ -12,9 +12,9 @@
 
 <body>
 
-    <h2>1</h2>
+    <h2>I predict a riot</h2>
     <input id="fancyAnswer1" disabled></input>
-    <h2>2</h2>
+    <h2>It can't possibly be that easy</h2>
     <input id="fancyAnswer2" disabled></input>
 </body>
 <script>
@@ -284,7 +284,15 @@
 
 
     function solvePuzzlePt2() {
-        return 0
+        var itCantBeThatEasy = parsedInput.map(x => x.reverse())
+        
+        var predictions = (
+            itCantBeThatEasy
+                .map(x => getNextPredictedSequenceForAllDepths(x)[0])
+                .map(x => x[x.length - 1])
+        )
+
+        return predictions.reduce((a,b) => a+b, 0)
     }
 
     function init() {
