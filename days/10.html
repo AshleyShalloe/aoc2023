@@ -67,14 +67,18 @@
         .pipe_a {
             background: radial-gradient(red 0%, red 50%, var(--pipe-background) 50%, var(--pipe-background) 100%);
         }
+
+        .pathpipe {
+            filter: invert(100%);
+        }
     </style>
 </head>
 
 <body>
 
-    <h2>1</h2>
+    <h2>It's a maze thing</h2>
     <input id="fancyAnswer1" disabled></input>
-    <h2>2</h2>
+    <h2>mspaint.exe fill tool would have solved this faster</h2>
     <input id="fancyAnswer2" disabled></input>
 
     <div style="display: flex; margin-top: 20px; flex-direction: column;">
@@ -85,6 +89,16 @@
 </body>
 <script>
     'use strict'
+    const testInput = `..........
+.S------7.
+.|F----7|.
+.||....||.
+.||....||.
+.|L-7F-J|.
+.|..||..|.
+.L--JL--J.
+..........`
+
     const puzzleInput = `J.7--J-.LL77FJ-F7FLJ-7.|FFF.F7FL-7F-7.L-FF77.-F-L7.F-L--7FL7..LF|J.7FF7.FLJ.-7-F7F-J77F77.|7.777FJ7FL7F-|.FFJ7|-|7FL-.LL7F77.|J7.|JJ-7-7|-|7
 J.|.FJ|FJ.-|LJ|L7FJ|.F.7-|J7L-J|L7|..-JF-JL77-|F|JL||.|L|J7L.|F7J-F-77--L|.-JF7F|JJ-|J||F7-77.|||L-FJ7J-|--7.F|7|LF|F--JF-F.LJ|.F|L|.|||7JL|
 |.|-JJFJL|LJ.FLJ-|-FJL-|L|||.|-F-F7-F7|7|F-|L-FF.|.-7FJ.|7F.F-|-7--JL..FLF-J|LLLJJ..J.LL.|L.-.L--J|L||JF|J||F-|L|LL|JJ.L7J.77L|-L|7--L7|||.|
@@ -339,6 +353,9 @@ L7LLLL--7L-JJL.LL--.|-F-L-|-7-LJJ-F.LJ--LJFJ--JL---7-LJLL-7.|JJ|.LF-FJ-LF|-7-|-J
             }
             var chosenOption = optionsArray.filter(x => !seenCoords.includes(`${x[0]},${x[1]}`))
             if (!chosenOption.length) {
+                if (!skipPaint) {
+                    removeNonPathPipes()
+                }
                 return loops
             }
             chosenOption = chosenOption[0]
@@ -347,11 +364,13 @@ L7LLLL--7L-JJL.LL--.|-F-L-|-7-LJJ-F.LJ--LJFJ--JL---7-LJLL-7.|JJ|.LF-FJ-LF|-7-|-J
             currentRow = chosenOption[0]
             currentCol = chosenOption[1]
 
-            if (!skipPaint){
-                theTable.rows[currentRow].cells[currentCol].style.filter = "invert(100%)"
+            if (!skipPaint) {
+                theTable.rows[currentRow].cells[currentCol].classList.add("pathpipe")
             }
 
-            if (solveSlow && (! (loops%5))){
+            theTable.rows[currentRow].cells[currentCol].dataset["direction"] = currentPipeType
+
+            if (solveSlow && (!(loops % 10))) {
                 await sleep(1)
             }
         }
@@ -362,6 +381,103 @@ L7LLLL--7L-JJL.LL--.|-F-L-|-7-LJJ-F.LJ--LJFJ--JL---7-LJLL-7.|JJ|.LF-FJ-LF|-7-|-J
     }
 
     const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+    function listToSublists(inputList, sublistLength) {
+        var returnList = []
+        for (var i = 0; i < inputList.length; i += sublistLength) {
+            returnList.push(inputList.slice(i, i + sublistLength))
+        }
+        return returnList
+    }
+
+    function removeNonPathPipes() {
+        document.querySelectorAll("#theTable td").forEach(x => {
+            if (!x.classList.contains("pathpipe") && !x.classList.contains("pipe_a")) {
+                x.style.background = "var(--pipe-background)"
+            }
+        })
+    }
+
+    function parseParsedPipeTo3x3(inputPipe) {
+        var mapping = {
+            "ns": [
+                0, 1, 0,
+                0, 1, 0,
+                0, 1, 0
+            ],
+            "ew": [
+                0, 0, 0,
+                1, 1, 1,
+                0, 0, 0
+            ],
+            "ne": [
+                0, 1, 0,
+                0, 1, 1,
+                0, 0, 0
+            ],
+            "nw": [
+                0, 1, 0,
+                1, 1, 0,
+                0, 0, 0
+            ],
+            "sw": [
+                0, 0, 0,
+                1, 1, 0,
+                0, 1, 0
+            ],
+            "se": [
+                0, 0, 0,
+                0, 1, 1,
+                0, 1, 0
+            ],
+            "a": [
+                1,1,1,
+                1,1,1,
+                1,1,1
+            ]
+        }
+
+        if (Object.keys(mapping).includes(inputPipe)){
+            return mapping[inputPipe]
+        }
+        else{
+            return [0,0,0,0,0,0]
+        }
+    }
+
+    function floodFill() {
+        // simplify data to just path / not path
+        var simplifiedMazeData = [...document.getElementById("theTable").getElementsByTagName("td")].map(x => x.dataset.direction ? x.dataset.direction : 0)
+        simplifiedMazeData = listToSublists(simplifiedMazeData, parsedInput.length)
+
+        // replace all pixels with 3x3 grid equivalents
+        var threeByThree = []
+        for (var i=0; i<simplifiedMazeData.length; i++){
+            var row0 = []
+            var row1 = []
+            var row2 = []
+            for (var j=0; j<simplifiedMazeData[i].length; j++){
+                var tempPipe = simplifiedMazeData[i][j]
+                if (!tempPipe){
+                    row0 = row0.concat([0,0,0])
+                    row1 = row1.concat([0,0,0])
+                    row2 = row2.concat([0,0,0])
+                }
+                else{
+                    var mappedPipe = listToSublists(parseParsedPipeTo3x3(tempPipe), 3)
+                    row0 = row0.concat(mappedPipe[0])
+                    row1 = row1.concat(mappedPipe[1])
+                    row2 = row2.concat(mappedPipe[2])
+                }
+            }
+            threeByThree.push(row0)
+            threeByThree.push(row1)
+            threeByThree.push(row2)
+        }
+
+        
+
+    }
 
     async function solvePuzzle() {
         return await solveMaze(false, true) / 2
