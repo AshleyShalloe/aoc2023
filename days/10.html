@@ -591,9 +591,12 @@ L7LLLL--7L-JJL.LL--.|-F-L-|-7-LJJ-F.LJ--LJFJ--JL---7-LJLL-7.|JJ|.LF-FJ-LF|-7-|-J
     }
 
 
-    function solvePuzzlePt2() {
-        floodFill(0,0)
-        var theAnswer = document.getElementById("theTable").getElementsByTagName("td").length - document.querySelectorAll(".filled, .pathpipe, .pipe_a").length
+    async function solvePuzzlePt2() {
+        if (!solved){
+            solved = await solveMaze()
+        }
+        floodFill(71,71) // works from (71,71) but not from (70,70) for some reason
+        var theAnswer = document.getElementsByClassName("filled").length
         document.getElementById("fancyAnswer2").value = theAnswer.toString()
     }
 
@@ -607,6 +610,7 @@ L7LLLL--7L-JJL.LL--.|-F-L-|-7-LJJ-F.LJ--LJFJ--JL---7-LJLL-7.|JJ|.LF-FJ-LF|-7-|-J
     // globals
     const testing = false
     const parsedInput = parseInput(testing ? testInput : puzzleInput)
+    var solved = false
 
     // init
     init();
