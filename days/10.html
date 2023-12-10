@@ -81,8 +81,8 @@
 
     <h2>It's a maze thing</h2>
     <input id="fancyAnswer1" disabled></input>
-    <h2>mspaint.exe fill tool would have solved this faster</h2>
-    <input id="fancyAnswer2" disabled></input>
+    <h2>mspaint.exe would have solved this faster</h2>
+    <input style="width: 500px;" id="fancyAnswer2" disabled></input>
 
     <div style="display: flex; margin-top: 20px; flex-direction: column;">
         Solve maze
@@ -448,7 +448,7 @@ L7LLLL--7L-JJL.LL--.|-F-L-|-7-LJJ-F.LJ--LJFJ--JL---7-LJLL-7.|JJ|.LF-FJ-LF|-7-|-J
         }
     }
 
-    function floodFill() {
+    function floodFill(startRow, startCol) {
         var theTable = document.getElementById("theTable")
 
         // simplify data to just path / not path
@@ -490,8 +490,8 @@ L7LLLL--7L-JJL.LL--.|-F-L-|-7-LJJ-F.LJ--LJFJ--JL---7-LJLL-7.|JJ|.LF-FJ-LF|-7-|-J
         // repeat until there are no marked squares adjacent
         // to anything other than marked squares or pathpipes
         var markedSquares = []
-        var currentRow = 0
-        var currentCol = 0
+        var currentRow = startRow
+        var currentCol = startCol
         var currentArrayLength = 0
 
         // init
@@ -592,14 +592,16 @@ L7LLLL--7L-JJL.LL--.|-F-L-|-7-LJJ-F.LJ--LJFJ--JL---7-LJLL-7.|JJ|.LF-FJ-LF|-7-|-J
 
 
     function solvePuzzlePt2() {
-        return 0
+        floodFill(0,0)
+        var theAnswer = document.getElementById("theTable").getElementsByTagName("td").length - document.querySelectorAll(".filled, .pathpipe, .pipe_a").length
+        document.getElementById("fancyAnswer2").value = theAnswer.toString()
     }
 
     async function init() {
         makeTable()
         var answerpt1 = await solvePuzzle()
         document.getElementById("fancyAnswer1").value = answerpt1
-        document.getElementById("fancyAnswer2").value = solvePuzzlePt2().toString()
+        document.getElementById("fancyAnswer2").value = "Run solvePuzzlePt2() in the console"
     }
 
     // globals
