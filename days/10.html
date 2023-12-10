@@ -71,6 +71,9 @@
         .pathpipe {
             filter: invert(100%);
         }
+        .filled{
+            background: red !important;
+        }
     </style>
 </head>
 
@@ -305,6 +308,7 @@ L7LLLL--7L-JJL.LL--.|-F-L-|-7-LJJ-F.LJ--LJFJ--JL---7-LJLL-7.|JJ|.LF-FJ-LF|-7-|-J
             var optionsArray = []
             seenCoords.push(`${currentRow},${currentCol}`)
             currentPipeType = parsePipe(parsedInput[currentRow][currentCol])
+            theTable.rows[currentRow].cells[currentCol].dataset["direction"] = currentPipeType
 
             // check all connections
             if (currentPipeType.includes("n") || (currentPipeType == "a")) {
@@ -368,8 +372,6 @@ L7LLLL--7L-JJL.LL--.|-F-L-|-7-LJJ-F.LJ--LJFJ--JL---7-LJLL-7.|JJ|.LF-FJ-LF|-7-|-J
                 theTable.rows[currentRow].cells[currentCol].classList.add("pathpipe")
             }
 
-            theTable.rows[currentRow].cells[currentCol].dataset["direction"] = currentPipeType
-
             if (solveSlow && (!(loops % 10))) {
                 await sleep(1)
             }
@@ -393,7 +395,8 @@ L7LLLL--7L-JJL.LL--.|-F-L-|-7-LJJ-F.LJ--LJFJ--JL---7-LJLL-7.|JJ|.LF-FJ-LF|-7-|-J
     function removeNonPathPipes() {
         document.querySelectorAll("#theTable td").forEach(x => {
             if (!x.classList.contains("pathpipe") && !x.classList.contains("pipe_a")) {
-                x.style.background = "var(--pipe-background)"
+                // x.style.background = "var(--pipe-background)"
+                x.style.filter = "opacity(0.3)"
             }
         })
     }
@@ -431,39 +434,44 @@ L7LLLL--7L-JJL.LL--.|-F-L-|-7-LJJ-F.LJ--LJFJ--JL---7-LJLL-7.|JJ|.LF-FJ-LF|-7-|-J
                 0, 1, 0
             ],
             "a": [
-                1,1,1,
-                1,1,1,
-                1,1,1
+                1, 1, 1,
+                1, 1, 1,
+                1, 1, 1
             ]
         }
 
-        if (Object.keys(mapping).includes(inputPipe)){
+        if (Object.keys(mapping).includes(inputPipe)) {
             return mapping[inputPipe]
         }
-        else{
-            return [0,0,0,0,0,0]
+        else {
+            return [0, 0, 0, 0, 0, 0]
         }
     }
 
     function floodFill() {
+        var theTable = document.getElementById("theTable")
+
         // simplify data to just path / not path
         var simplifiedMazeData = [...document.getElementById("theTable").getElementsByTagName("td")].map(x => x.dataset.direction ? x.dataset.direction : 0)
         simplifiedMazeData = listToSublists(simplifiedMazeData, parsedInput.length)
 
+        var width = parsedInput[0].length * 3
+        var height = parsedInput.length * 3
+
         // replace all pixels with 3x3 grid equivalents
         var threeByThree = []
-        for (var i=0; i<simplifiedMazeData.length; i++){
+        for (var i = 0; i < simplifiedMazeData.length; i++) {
             var row0 = []
             var row1 = []
             var row2 = []
-            for (var j=0; j<simplifiedMazeData[i].length; j++){
+            for (var j = 0; j < simplifiedMazeData[i].length; j++) {
                 var tempPipe = simplifiedMazeData[i][j]
-                if (!tempPipe){
-                    row0 = row0.concat([0,0,0])
-                    row1 = row1.concat([0,0,0])
-                    row2 = row2.concat([0,0,0])
+                if (!tempPipe) {
+                    row0 = row0.concat([0, 0, 0])
+                    row1 = row1.concat([0, 0, 0])
+                    row2 = row2.concat([0, 0, 0])
                 }
-                else{
+                else {
                     var mappedPipe = listToSublists(parseParsedPipeTo3x3(tempPipe), 3)
                     row0 = row0.concat(mappedPipe[0])
                     row1 = row1.concat(mappedPipe[1])
@@ -475,8 +483,107 @@ L7LLLL--7L-JJL.LL--.|-F-L-|-7-LJJ-F.LJ--LJFJ--JL---7-LJLL-7.|JJ|.LF-FJ-LF|-7-|-J
             threeByThree.push(row2)
         }
 
-        
+        // start at the top left corner
+        // mark it
+        // mark all adjacent squares that aren't pathpipes
+        // go to the next marked square
+        // repeat until there are no marked squares adjacent
+        // to anything other than marked squares or pathpipes
+        var markedSquares = []
+        var currentRow = 0
+        var currentCol = 0
+        var currentArrayLength = 0
 
+        // init
+        markedSquares.push(`${currentRow},${currentCol}`)
+
+        // check all directions for all marked squares
+        for (var i = 0; i < markedSquares.length; i++) {
+            var currentSquare = markedSquares[i].split(",").map(x => parseInt(x))
+            currentRow = currentSquare[0]
+            currentCol = currentSquare[1]
+            console.log(currentRow, currentCol)
+
+            var northCoord = `${currentRow - 1},${currentCol}`
+            var southCoord = `${currentRow + 1},${currentCol}`
+            var eastCoord = `${currentRow},${currentCol + 1}`
+            var westCoord = `${currentRow},${currentCol - 1}`
+
+            // check north
+            if (
+                ((currentRow - 1) >= 0)
+                && !threeByThree[currentRow - 1][currentCol]
+                && !markedSquares.includes(northCoord)
+            ) {
+                markedSquares.push(northCoord)
+
+            }
+            // check south
+            if (
+                ((currentRow + 1) < height)
+                && !threeByThree[currentRow + 1][currentCol]
+                && !markedSquares.includes(southCoord)
+            ) {
+                markedSquares.push(southCoord)
+
+            }
+            // check east
+            if (
+                ((currentCol + 1) < width)
+                && !threeByThree[currentRow][currentCol + 1]
+                && !markedSquares.includes(eastCoord)
+            ) {
+                markedSquares.push(eastCoord)
+            }
+            // check west
+            if (
+                ((currentCol - 1) >= 0)
+                && !threeByThree[currentRow][currentCol - 1]
+                && !markedSquares.includes(westCoord)
+            ) {
+                markedSquares.push(westCoord)
+            }
+        }
+
+        // fill the grid
+        var newGrid = Array.from(threeByThree)
+        var markedCoords = markedSquares.map(x => x.split(",").map(y => parseInt(y)))
+
+        for (var i=0; i<markedCoords.length; i++){
+            var row = markedCoords[i][0]
+            var col = markedCoords[i][1]
+            newGrid[row][col] = "I"
+        }
+
+        // convert the filled 3x3 grid back to a normal grid representation
+        var new1by1Grid = []
+        for (var i=0; i<height; i+=3){
+            var tempRow = []
+            for (var j=0; j<width; j+=3){
+                var row0 = newGrid[i].slice(j, j+3)
+                var row1 = newGrid[i+1].slice(j, j+3)
+                var row2 = newGrid[i+2].slice(j, j+3)
+                // if it's all I
+                if (!row0.concat(row1, row2).filter(x => x != "I").length){
+                    tempRow.push(1)
+                }
+                else{
+                    tempRow.push(0)
+                }
+            }
+            new1by1Grid.push(tempRow)
+        }
+
+        // style the cells
+        for (var i=0; i<new1by1Grid.length; i++){
+            for (var j=0; j<new1by1Grid[i].length; j++){
+                var isFilled = new1by1Grid[i][j]
+                if (isFilled){
+                    theTable.rows[i].cells[j].classList.add("filled")
+                }
+            }
+        }
+        console.log("DONE")
     }
 
     async function solvePuzzle() {
