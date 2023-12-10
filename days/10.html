@@ -275,7 +275,7 @@ L7LLLL--7L-JJL.LL--.|-F-L-|-7-LJJ-F.LJ--LJFJ--JL---7-LJLL-7.|JJ|.LF-FJ-LF|-7-|-J
 
     }
 
-    async function solveMaze(solveSlow) {
+    async function solveMaze(solveSlow, skipPaint) {
         var theTable = document.getElementById("theTable")
         var theAnimal = document.getElementsByClassName("pipe_a")[0]
         var currentRow = Array.from(theAnimal.parentNode.parentNode.children).indexOf(theAnimal.parentElement)
@@ -284,8 +284,10 @@ L7LLLL--7L-JJL.LL--.|-F-L-|-7-LJJ-F.LJ--LJFJ--JL---7-LJLL-7.|JJ|.LF-FJ-LF|-7-|-J
         var width = parsedInput[0].length
         var height = parsedInput.length
         var seenCoords = []
+        var loops = 0
 
         while (!seenCoords.includes(`${currentRow},${currentCol}`)) {
+            loops++
             var optionsArray = []
             seenCoords.push(`${currentRow},${currentCol}`)
             currentPipeType = parsePipe(parsedInput[currentRow][currentCol])
@@ -337,16 +339,19 @@ L7LLLL--7L-JJL.LL--.|-F-L-|-7-LJJ-F.LJ--LJFJ--JL---7-LJLL-7.|JJ|.LF-FJ-LF|-7-|-J
             }
             var chosenOption = optionsArray.filter(x => !seenCoords.includes(`${x[0]},${x[1]}`))
             if (!chosenOption.length) {
-                return
+                return loops
             }
             chosenOption = chosenOption[0]
 
             // go there
             currentRow = chosenOption[0]
             currentCol = chosenOption[1]
-            theTable.rows[currentRow].cells[currentCol].style.filter = "invert(100%)"
 
-            if (solveSlow){
+            if (!skipPaint){
+                theTable.rows[currentRow].cells[currentCol].style.filter = "invert(100%)"
+            }
+
+            if (solveSlow && (! (loops%5))){
                 await sleep(1)
             }
         }
@@ -358,8 +363,8 @@ L7LLLL--7L-JJL.LL--.|-F-L-|-7-LJJ-F.LJ--LJFJ--JL---7-LJLL-7.|JJ|.LF-FJ-LF|-7-|-J
 
     const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-    function solvePuzzle() {
-        return 0
+    async function solvePuzzle() {
+        return await solveMaze(false, true) / 2
     }
 
 
@@ -367,10 +372,11 @@ L7LLLL--7L-JJL.LL--.|-F-L-|-7-LJJ-F.LJ--LJFJ--JL---7-LJLL-7.|JJ|.LF-FJ-LF|-7-|-J
         return 0
     }
 
-    function init() {
-        document.getElementById("fancyAnswer1").value = solvePuzzle().toString()
-        document.getElementById("fancyAnswer2").value = solvePuzzlePt2().toString()
+    async function init() {
         makeTable()
+        var answerpt1 = await solvePuzzle()
+        document.getElementById("fancyAnswer1").value = answerpt1
+        document.getElementById("fancyAnswer2").value = solvePuzzlePt2().toString()
     }
 
     // globals
