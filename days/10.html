@@ -82,12 +82,16 @@
     <h2>It's a maze thing</h2>
     <input id="fancyAnswer1" disabled></input>
     <h2>mspaint.exe would have solved this faster</h2>
-    <input style="width: 500px;" id="fancyAnswer2" disabled></input>
+    <input id="fancyAnswer2" disabled></input>
 
     <div style="display: flex; margin-top: 20px; flex-direction: column;">
         Solve maze
-        <button style="margin: 5px;" onclick="this.disabled = true; this.nextElementSibling.disabled = true; solveMaze()">Quickly</button>
-        <button style="margin: 5px;" onclick="this.disabled = true; this.previousElementSibling.disabled = true; solveMaze(true)">Slowly</button>
+        <button style="margin: 5px;" id="button1" onclick="this.disabled = true; this.nextElementSibling.disabled = true; solveMaze()">Quickly</button>
+        <button style="margin: 5px;" id="button2" onclick="this.disabled = true; this.previousElementSibling.disabled = true; solveMaze(true)">Slowly</button>
+    </div>
+    <div style="display: flex; margin-top: 20px; flex-direction: column;">
+        Solve part 2
+        <button style="margin: 5px;" onclick="this.disabled = true; document.getElementById('button1').disabled = true; document.getElementById('button2').disabled = true; solvePuzzlePt2()">Go</button>
     </div>
 </body>
 <script>
@@ -300,13 +304,13 @@ L7LLLL--7L-JJL.LL--.|-F-L-|-7-LJJ-F.LJ--LJFJ--JL---7-LJLL-7.|JJ|.LF-FJ-LF|-7-|-J
         var currentPipeType = parsePipe(parsedInput[currentRow][currentCol])
         var width = parsedInput[0].length
         var height = parsedInput.length
-        var seenCoords = []
+        var seenCoords = new Set()
         var loops = 0
 
-        while (!seenCoords.includes(`${currentRow},${currentCol}`)) {
+        while (!seenCoords.has(`${currentRow},${currentCol}`)) {
             loops++
             var optionsArray = []
-            seenCoords.push(`${currentRow},${currentCol}`)
+            seenCoords.add(`${currentRow},${currentCol}`)
             currentPipeType = parsePipe(parsedInput[currentRow][currentCol])
             theTable.rows[currentRow].cells[currentCol].dataset["direction"] = currentPipeType
 
@@ -355,7 +359,7 @@ L7LLLL--7L-JJL.LL--.|-F-L-|-7-LJJ-F.LJ--LJFJ--JL---7-LJLL-7.|JJ|.LF-FJ-LF|-7-|-J
             if (optionsArray.length > 2) {
                 console.error("Too many options found")
             }
-            var chosenOption = optionsArray.filter(x => !seenCoords.includes(`${x[0]},${x[1]}`))
+            var chosenOption = optionsArray.filter(x => !seenCoords.has(`${x[0]},${x[1]}`))
             if (!chosenOption.length) {
                 if (!skipPaint) {
                     removeNonPathPipes()
@@ -578,7 +582,6 @@ L7LLLL--7L-JJL.LL--.|-F-L-|-7-LJJ-F.LJ--LJFJ--JL---7-LJLL-7.|JJ|.LF-FJ-LF|-7-|-J
                 }
             }
         }
-        console.log("DONE")
     }
 
     async function solvePuzzle() {
@@ -599,7 +602,7 @@ L7LLLL--7L-JJL.LL--.|-F-L-|-7-LJJ-F.LJ--LJFJ--JL---7-LJLL-7.|JJ|.LF-FJ-LF|-7-|-J
         makeTable()
         var answerpt1 = await solvePuzzle()
         document.getElementById("fancyAnswer1").value = answerpt1
-        document.getElementById("fancyAnswer2").value = "Run solvePuzzlePt2() in the console"
+        document.getElementById("fancyAnswer2").value = "Click the button"
     }
 
     // globals
