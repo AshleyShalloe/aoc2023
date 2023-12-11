@@ -12,9 +12,9 @@
 
 <body>
 
-    <h2>1</h2>
+    <h2>Universe go stretchy</h2>
     <input id="fancyAnswer1" disabled></input>
-    <h2>2</h2>
+    <h2>Advent of Code Cinematic Universe</h2>
     <input id="fancyAnswer2" disabled></input>
 
 </body>
@@ -232,7 +232,7 @@
 
         for (var i = 0; i < inputUniverse.length; i++) {
             for (var j = 0; j < inputUniverse[i].length; j++) {
-                var coords = [i, j]
+                var coords = [j, i] // equiv to col,row (i.e. x,y)
                 if (inputUniverse[i][j] == "#") {
                     returnArray.push(coords)
                 }
@@ -271,6 +271,47 @@
         return Math.abs(x1 - x0) + Math.abs(y1 - y0)
     }
 
+    function getAdventOfCodeCinematicUniverse() {
+        var emptyColIdxArray = getIdxOfEmptyCols()
+        var emptyRowIdxArray = getIdxOfEmptyRows()
+        var coordPairArray = getAllGalaxyCoordPairs(parsedInput)
+        var expandedCoordPairArray = []
+        var expansionFactor = 1000000
+
+        for (var i = 0; i < coordPairArray.length; i++) {
+            var coordPair = coordPairArray[i]
+            var x0 = coordPair[0][0]
+            var x1 = coordPair[1][0]
+            var y0 = coordPair[0][1]
+            var y1 = coordPair[1][1]
+            var sortedXCoords = [x0, x1].sort((a, b) => a - b)
+            var sortedYCoords = [y0, y1].sort((a, b) => a - b)
+
+            var emptyColsPassed = emptyColIdxArray.filter(x =>
+                (x > sortedXCoords[0])
+                && (x < sortedXCoords[1])
+            ).length
+
+            var emptyRowsPassed = emptyRowIdxArray.filter(x =>
+                (x > sortedYCoords[0])
+                && (x < sortedYCoords[1])
+            ).length
+
+            var finalX0 = sortedXCoords[0]
+            var finalX1 = sortedXCoords[1] + ((expansionFactor - 1) * emptyColsPassed)
+            var finalY0 = sortedYCoords[0]
+            var finalY1 = sortedYCoords[1] + ((expansionFactor - 1) * emptyRowsPassed)
+
+            expandedCoordPairArray.push([[finalX0, finalY0], [finalX1, finalY1]])
+        }
+
+        return (
+            expandedCoordPairArray
+                .map(x => taxicabDistance(x[0], x[1]))
+                .reduce((a, b) => a + b, 0)
+        )
+    }
+
 
     function solvePuzzle() {
         return (
@@ -282,7 +323,7 @@
 
 
     function solvePuzzlePt2() {
-        return 0
+        return getAdventOfCodeCinematicUniverse()
     }
 
     function init() {
