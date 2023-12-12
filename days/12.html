@@ -1056,6 +1056,23 @@
         return returnString
     }
 
+    // https://stackoverflow.com/a/16436975
+    function arraysEqual(a, b) {
+        if (a === b) return true;
+        if (a == null || b == null) return false;
+        if (a.length !== b.length) return false;
+
+        // If you don't care about the order of the elements inside
+        // the array, you should sort both arrays here.
+        // Please note that calling sort on an array will modify that array.
+        // you might want to clone your array first.
+
+        for (var i = 0; i < a.length; ++i) {
+            if (a[i] !== b[i]) return false;
+        }
+        return true;
+    }
+
     function doConditionsMatchGroups(inputConditions, inputGroups) {
         var tempConditions = inputConditions
         // replace all repeating periods with single periods
@@ -1073,7 +1090,7 @@
         // generate groups
         tempConditions = tempConditions.split(".").map(x => x.length)
 
-        return JSON.stringify(inputGroups) == JSON.stringify(tempConditions)
+        return arraysEqual(inputGroups, tempConditions)
     }
 
     function generateAllPossibleCombos(inputConditions, inputGroups) {
@@ -1084,18 +1101,24 @@
         var unknownSpringsCount = totalSpringsCount - knownSpringsCount
         var unknownBrokenSpringsCount = maxBrokenSpringsCount - knownBrokenSpringCount
 
-        var combosArray = []
+        var combosArray = new Set()
 
         // generate all binary numbers as strings, up to 2^unknownSpringsCount
         // strings to arrays
         // filter to just arrays where the sum == maxBrokenSpringCount
         for (var i = 0; i < (2 ** unknownSpringsCount); i++) {
             var bin = leftpad(dec2bin(i), unknownSpringsCount, "0")
-            bin = bin.split("").map(x => parseInt(x))
-            if (bin.reduce((a, b) => a + b, 0) == unknownBrokenSpringsCount) {
-                combosArray.push(bin)
+            if (!combosArray.has(bin)){
+                bin = bin.split("").map(x => +x)
+                var replacementBrokenSpringCount = bin.reduce((a, b) => a + b, 0)
+                if (replacementBrokenSpringCount == unknownBrokenSpringsCount) {
+                    combosArray.add(bin.join(""))
+                    combosArray.add(bin.reverse().join(""))
+                }
             }
         }
+
+        combosArray = [...combosArray].map(x => x.split("").map(x => +x))
 
         var comboConditionsArray = []
 
@@ -1117,18 +1140,37 @@
         return comboConditionsArray
     }
 
-    function countAndSumCombosForAllRows() {
+    function countAndSumCombosForAllRows(inputData) {
         var returnSum = 0
-        for (var idx in parsedInput) {
-            var record = parsedInput[idx]
+        for (var idx in inputData) {
+            // console.log(parseInt(idx)+1, "of", Object.keys(inputData).length)
+            var record = inputData[idx]
             returnSum += generateAllPossibleCombos(record["conditions"], record["groups"]).length
         }
         return returnSum
     }
 
+    function uncoilSprings() {
+        var returnObj = parsedInput
+
+        for (var idx in returnObj) {
+            var tempRecord = returnObj[idx]
+            var tempConditions = tempRecord["conditions"]
+            var tempGroups = tempRecord["groups"]
+
+            tempConditions = (tempConditions + "?").repeat(5)
+            tempConditions = tempConditions.slice(0, tempConditions.length - 1)
+            tempGroups = Array(5).fill(tempGroups).flat()
+
+            returnObj[idx] = { "conditions": tempConditions, "groups": tempGroups }
+        }
+
+        return returnObj
+    }
+
 
     function solvePuzzle() {
-        return countAndSumCombosForAllRows().toString()
+        return countAndSumCombosForAllRows(parsedInput).toString()
     }
 
 
