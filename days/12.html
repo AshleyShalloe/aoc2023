@@ -1093,6 +1093,12 @@
         return arraysEqual(inputGroups, tempConditions)
     }
 
+    function arrayRotate(arr, reverse) {
+        if (reverse) arr.unshift(arr.pop());
+        else arr.push(arr.shift());
+        return arr;
+    }
+
     function generateAllPossibleCombos(inputConditions, inputGroups) {
         var maxBrokenSpringsCount = inputGroups.reduce((a, b) => a + b, 0)
         var knownSpringsCount = inputConditions.replaceAll("?", "").length
@@ -1103,22 +1109,34 @@
 
         var combosArray = new Set()
 
-        // generate all binary numbers as strings, up to 2^unknownSpringsCount
-        // strings to arrays
-        // filter to just arrays where the sum == maxBrokenSpringCount
-        for (var i = 0; i < (2 ** unknownSpringsCount); i++) {
-            var bin = leftpad(dec2bin(i), unknownSpringsCount, "0")
-            if (!combosArray.has(bin)){
-                bin = bin.split("").map(x => +x)
-                var replacementBrokenSpringCount = bin.reduce((a, b) => a + b, 0)
-                if (replacementBrokenSpringCount == unknownBrokenSpringsCount) {
-                    combosArray.add(bin.join(""))
-                    combosArray.add(bin.reverse().join(""))
+        // check if we've already cached the combos
+        if (Object.keys(cacheObj).includes(`${unknownSpringsCount}.${unknownBrokenSpringsCount}`)) {
+            combosArray = cacheObj[`${unknownSpringsCount}.${unknownBrokenSpringsCount}`]
+        }
+        else {
+            // generate all binary numbers as strings, up to 2^unknownSpringsCount
+            // strings to arrays
+            // filter to just arrays where the sum == maxBrokenSpringCount
+            for (var i = 0; i < (2 ** unknownSpringsCount); i++) {
+                var bin = leftpad(dec2bin(i), unknownSpringsCount, "0")
+                if (!combosArray.has(bin)) {
+                    bin = bin.split("").map(x => +x)
+                    var replacementBrokenSpringCount = bin.reduce((a, b) => a + b, 0)
+                    if (replacementBrokenSpringCount == unknownBrokenSpringsCount) {
+                        combosArray.add(bin.join(""))
+                        combosArray.add(bin.reverse().join(""))
+                        var tempBin = bin
+                        for (var j = 0; j < unknownSpringsCount; j++) {
+                            tempBin = arrayRotate(tempBin)
+                            combosArray.add(tempBin.join(""))
+                            combosArray.add(tempBin.reverse().join(""))
+                        }
+                    }
                 }
             }
+            combosArray = [...combosArray].map(x => x.split("").map(x => +x))
+            cacheObj[`${unknownSpringsCount}.${unknownBrokenSpringsCount}`] = combosArray
         }
-
-        combosArray = [...combosArray].map(x => x.split("").map(x => +x))
 
         var comboConditionsArray = []
 
@@ -1143,7 +1161,7 @@
     function countAndSumCombosForAllRows(inputData) {
         var returnSum = 0
         for (var idx in inputData) {
-            // console.log(parseInt(idx)+1, "of", Object.keys(inputData).length)
+            console.log(parseInt(idx) + 1, "of", Object.keys(inputData).length)
             var record = inputData[idx]
             returnSum += generateAllPossibleCombos(record["conditions"], record["groups"]).length
         }
@@ -1168,7 +1186,6 @@
         return returnObj
     }
 
-
     function solvePuzzle() {
         return countAndSumCombosForAllRows(parsedInput).toString()
     }
@@ -1184,8 +1201,9 @@
     }
 
     // globals
-    const testing = false
+    const testing = true
     const parsedInput = parseInput(testing ? testInput : puzzleInput)
+    var cacheObj = {}
 
     // init
     init();
