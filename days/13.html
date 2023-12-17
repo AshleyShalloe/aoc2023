@@ -12,9 +12,9 @@
 
 <body>
 
-    <h2>1</h2>
+    <h2>Mirror, mirror</h2>
     <input id="fancyAnswer1" disabled></input>
-    <h2>2</h2>
+    <h2>Needs a clean</h2>
     <input id="fancyAnswer2" disabled></input>
 
 </body>
@@ -1449,28 +1449,28 @@
         return input.split("\n\n").map(x => x.split("\n").map(y => y.split("")))
     }
 
-    function areArraysIdentical(arrayA, arrayB){
+    function areArraysIdentical(arrayA, arrayB) {
         var aLen = arrayA.length
         var bLen = arrayB.length
-        if (aLen != bLen){
+        if (aLen != bLen) {
             return false
         }
-        for (var i=0; i<aLen; i++){
-            if (arrayA[i] != arrayB[i]){
+        for (var i = 0; i < aLen; i++) {
+            if (arrayA[i] != arrayB[i]) {
                 return false
             }
         }
         return true
     }
 
-    function reverseString(inputString){
+    function reverseString(inputString) {
         return inputString.split("").reverse().join("")
     }
 
-    function counter(inputArray){
+    function counter(inputArray) {
         var counts = {}
 
-        for (var i=0; i<inputArray.length; i++){
+        for (var i = 0; i < inputArray.length; i++) {
             var arrayItem = inputArray[i]
             counts[arrayItem] = (counts[arrayItem] ? counts[arrayItem] : 0) + 1
         }
@@ -1478,7 +1478,7 @@
         return counts
     }
 
-    function findVerticalReflectionPoint(inputPuzzle){
+    function findVerticalReflectionPoint(inputPuzzle, findAll) {
         `
         I suppose we don't need to check every row
         We could just check as many as is required
@@ -1490,48 +1490,62 @@
         `
         var possibleReflectionPointsArray = []
         var inputLen = inputPuzzle.length
-        for (var i=0; i<inputPuzzle.length; i++){
+        for (var i = 0; i < inputPuzzle.length; i++) {
             var row = inputPuzzle[i]
-            for (var j=1; j<(row.length); j++){
-                var leftSlice = row.slice(0,j)
+            for (var j = 1; j < (row.length); j++) {
+                var leftSlice = row.slice(0, j)
                 var rightSlice = row.slice(j)
                 var lsLen = leftSlice.length
                 var rsLen = rightSlice.length
                 var shortLen = lsLen > rsLen ? rsLen : lsLen
                 if (areArraysIdentical(
-                    leftSlice.reverse().slice(0,shortLen),
+                    leftSlice.reverse().slice(0, shortLen),
                     rightSlice.slice(0, shortLen)
-                )){
+                )) {
                     possibleReflectionPointsArray.push(j)
                 }
             }
         }
 
         var counterObj = counter(possibleReflectionPointsArray)
-        
-        for (var key in counterObj){
-            var value = counterObj[key]
-            if (value == inputLen){
-                return parseInt(key)
+
+        if (!findAll) {
+            for (var key in counterObj) {
+                var value = counterObj[key]
+                if (value == inputLen) {
+                    return parseInt(key)
+                }
+            }
+        }
+        else{
+            var returnKeysArray = []
+            for (var key in counterObj) {
+                var value = counterObj[key]
+                if (value == inputLen) {
+                    returnKeysArray.push(parseInt(key))
+                }
+            }
+            if (returnKeysArray.length){
+                return returnKeysArray
             }
         }
 
         return false
     }
 
-    function findHorizontalReflectionPoint(inputPuzzle){
-        return findVerticalReflectionPoint(rotateListOfLists(inputPuzzle))
+    function findHorizontalReflectionPoint(inputPuzzle, findAll) {
+        return findVerticalReflectionPoint(rotateListOfLists(inputPuzzle), findAll)
     }
 
-    function rotateListOfLists(input){
+    function rotateListOfLists(input) {
         var returnList = []
         var inputWidth = input[0].length
         var inputHeight = input.length
 
-        for (var i=0; i<inputWidth; i++){
+        for (var i = 0; i < inputWidth; i++) {
             var tempCol = []
             // for (var j=(inputHeight - 1); j>= 0; j--){
-            for (var j=0; j<inputHeight; j++){
+            for (var j = 0; j < inputHeight; j++) {
                 tempCol.push(input[j][i])
             }
             returnList.push(tempCol)
@@ -1539,31 +1553,77 @@
         return returnList
     }
 
-    function findReflectionPoint(inputPuzzle){
+    function findReflectionPoint(inputPuzzle) {
         var verticalAxis = findVerticalReflectionPoint(inputPuzzle)
         var horizontalAxis
 
-        if (!verticalAxis){
+        if (!verticalAxis) {
             horizontalAxis = findHorizontalReflectionPoint(inputPuzzle)
-            return [0,horizontalAxis]
+            return [0, horizontalAxis]
         }
-        else{
-            return [verticalAxis,0]
+        else {
+            return [verticalAxis, 0]
         }
+    }
+
+    function findAllReflectionPoints(inputPuzzle) {
+        var verticalAxis = findVerticalReflectionPoint(inputPuzzle, true)
+        var horizontalAxis = findHorizontalReflectionPoint(inputPuzzle, true)
+
+        verticalAxis = verticalAxis ? verticalAxis.filter(x => x[0] !== false).map(x => [x, 0]) : []
+        horizontalAxis = horizontalAxis ? horizontalAxis.filter(x => x[1] !== false).map(x => [0, x]) : []
+
+        return verticalAxis.concat(horizontalAxis)
+    }
+
+    function flipSymbolAtIndex(inputPuzzle, row, col) {
+        var returnPuzzle = JSON.parse(inputPuzzle)
+        returnPuzzle[row][col] == "#" ? returnPuzzle[row][col] = "." : returnPuzzle[row][col] = "#"
+        return returnPuzzle
+    }
+
+    function generateAllPossibleDesmudgedPatterns(inputPuzzle) {
+        var desmudgedArray = []
+
+        for (var i = 0; i < inputPuzzle.length; i++) {
+            var row = inputPuzzle[i]
+            for (var j = 0; j < row.length; j++) {
+                desmudgedArray.push(flipSymbolAtIndex(JSON.stringify(inputPuzzle), i, j))
+            }
+        }
+        return desmudgedArray
+    }
+
+    function findDesmudgedReflectionPoint(inputPuzzle) {
+        var smudgedPoint = findReflectionPoint(inputPuzzle).toString()
+        var desmudgedArray = generateAllPossibleDesmudgedPatterns(inputPuzzle)
+
+        for (var i = 0; i < desmudgedArray.length; i++) {
+            var newReflectionPointsArray = findAllReflectionPoints(desmudgedArray[i])
+            var actuallyNew = newReflectionPointsArray.filter(x => !areArraysIdentical(x.toString(), smudgedPoint))
+            if (actuallyNew.length){
+                return actuallyNew[0]
+            }
+        }
+        console.error("Should be unreachable")
     }
 
 
     function solvePuzzle() {
         var reflectionPointsArray = parsedInput.map(x => findReflectionPoint(x))
-        var verticalSum = reflectionPointsArray.map(x => x[0]).reduce((a,b) => a+b, 0)
-        var horizontalSum = reflectionPointsArray.map(x => x[1]).reduce((a,b) => a+b, 0)
+        var verticalSum = reflectionPointsArray.map(x => x[0]).reduce((a, b) => a + b, 0)
+        var horizontalSum = reflectionPointsArray.map(x => x[1]).reduce((a, b) => a + b, 0)
 
         return verticalSum + (100 * horizontalSum)
     }
 
 
     function solvePuzzlePt2() {
-        return 0
+        var reflectionPointsArray = parsedInput.map(x => findDesmudgedReflectionPoint(x))
+        var verticalSum = reflectionPointsArray.map(x => x[0]).reduce((a, b) => a + b, 0)
+        var horizontalSum = reflectionPointsArray.map(x => x[1]).reduce((a, b) => a + b, 0)
+
+        return verticalSum + (100 * horizontalSum)
     }
 
     function init() {
