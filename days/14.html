@@ -157,6 +157,22 @@ O#O..O...O.O....OO.....##O.....OOO..OO.....#O...OO.#....#.O.......#.#.........#O
         return returnList
     }
 
+    function rotateListOfListsTheOtherWay(input) {
+        var returnList = []
+        var inputWidth = input[0].length
+        var inputHeight = input.length
+
+        for (var i = 0; i < inputWidth; i++) {
+            var tempCol = []
+            // for (var j = (inputHeight - 1); j >= 0; j--) {
+            for (var j = 0; j < inputHeight; j++) {
+                tempCol.push(input[j][i])
+            }
+            returnList.push(tempCol)
+        }
+        return returnList
+    }
+
     function moveRocksNorthInArray(inputArray) {
         `
         Takes an array ["O",".", "O"] as input
@@ -164,7 +180,7 @@ O#O..O...O.O....OO.....##O.....OOO..OO.....#O...OO.#....#.O.......#.#.........#O
         i.e. where all round rocks have been moved
         to the leftmost position
         `
-        var returnArray = inputArray
+        var returnArray = [...inputArray]
 
         for (var i = 0; i < returnArray.length; i++) {
             var rockType = returnArray[i]
@@ -199,6 +215,41 @@ O#O..O...O.O....OO.....##O.....OOO..OO.....#O...OO.#....#.O.......#.#.........#O
         return inputArrayOfArrays.map(x => moveRocksNorthInArray(x))
     }
 
+    function cycleRocks(inputArrayOfArrays) {
+        var tempArrayOfArrays = [...inputArrayOfArrays]
+        // console.log(rotateListOfListsTheOtherWay(tempArrayOfArrays).map(x => x.join("")).join("\n"), "input")
+
+        // tilt north
+        tempArrayOfArrays = moveAllRocksNorthArrayOfArrays(tempArrayOfArrays)
+        // console.log(rotateListOfListsTheOtherWay(tempArrayOfArrays).map(x => x.join("")).join("\n"), "tilt north")
+        // rotate and tilt west
+        tempArrayOfArrays = moveAllRocksNorthArrayOfArrays(rotateListOfListsTheOtherWay(tempArrayOfArrays))
+        // console.log(
+        //     ((tempArrayOfArrays)).map(x => x.join("")).join("\n"),
+        //     "tilt west"
+        // )
+        // rotate and tilt south
+        tempArrayOfArrays = moveAllRocksNorthArrayOfArrays(rotateListOfLists(tempArrayOfArrays))
+        // console.log(
+        //     rotateListOfLists(rotateListOfLists(rotateListOfLists(rotateListOfLists(rotateListOfListsTheOtherWay(rotateListOfLists(rotateListOfListsTheOtherWay(tempArrayOfArrays))))))).map(x => x.join("")).join("\n"),
+        //     "tilt south"
+        // )
+        // rotate and tilt east
+        tempArrayOfArrays = moveAllRocksNorthArrayOfArrays(rotateListOfLists(tempArrayOfArrays))
+        // console.log(
+        //     rotateListOfLists(rotateListOfLists(tempArrayOfArrays)).map(x => x.join("")).join("\n"),
+        //     "tilt east"
+        // )
+        // go back to north but don't tilt
+        tempArrayOfArrays = rotateListOfLists(tempArrayOfArrays)
+        // console.log(
+        //     rotateListOfLists(tempArrayOfArrays).map(x => x.join("")).join("\n"),
+        //     "rotate back to north"
+        // )
+
+        return tempArrayOfArrays
+    }
+
 
     function solvePuzzle() {
         return moveAllRocksNorthArrayOfArrays(parsedInput).map(x => getRockArrayValue(x)).flat().reduce((a, b) => a + b, 0)
@@ -215,7 +266,7 @@ O#O..O...O.O....OO.....##O.....OOO..OO.....#O...OO.#....#.O.......#.#.........#O
     }
 
     // globals
-    const testing = false
+    const testing = true
     const parsedInput = parseInput(testing ? testInput : puzzleInput)
 
     // init
