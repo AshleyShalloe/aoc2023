@@ -250,6 +250,60 @@ O#O..O...O.O....OO.....##O.....OOO..OO.....#O...OO.#....#.O.......#.#.........#O
         return tempArrayOfArrays
     }
 
+    function cycleTillRepeat(inputArrayOfArrays) {
+        var seenStates = new Set()
+        var tempArrayOfArrays = [...inputArrayOfArrays]
+        var iterationCount = 0
+        
+        // find the first point where we enter a cycle
+        while (true) {
+            iterationCount++
+            var arrayHash = JSON.stringify(tempArrayOfArrays)
+            if (!seenStates.has(arrayHash)) {
+                seenStates.add(arrayHash)
+                tempArrayOfArrays = cycleRocks(tempArrayOfArrays)
+                continue
+            }
+            else {
+                console.log("stable state found after", iterationCount, "iterations")
+                break
+            }
+        }
+        return [tempArrayOfArrays, iterationCount]
+    }
+
+    function recursiveCycleTillRepeat(inputArrayOfArrays, iterations){
+        var nextCycle = cycleTillRepeat(inputArrayOfArrays)
+        if (nextCycle[1] == iterations){
+            return nextCycle
+        }
+        else{
+            return recursiveCycleTillRepeat(nextCycle[0], nextCycle[1])
+        }
+    }
+
+    function test() {
+        var iterationsToEnterCycle = cycleTillRepeat(parsedInput)[1]
+        var stableState = recursiveCycleTillRepeat(parsedInput, 0)
+        var pattern = stableState[0]
+        var cycleLength = stableState[1]
+        var returnArrayOfArrays = pattern
+
+        // 1,000,000,000 = iterationsToEnterCycle + stableStateLoops
+        var n = (1000000000 - iterationsToEnterCycle) % cycleLength
+
+        if (!n){
+            // do nothing
+        }
+        else{
+            for (var i=0; i<n; i++){
+                console.log("cycling", i)
+                returnArrayOfArrays = cycleRocks(returnArrayOfArrays)
+            }
+        }
+        return returnArrayOfArrays.map(x => getRockArrayValue(x)).flat().reduce((a, b) => a + b, 0)
+    }
+
 
     function solvePuzzle() {
         return moveAllRocksNorthArrayOfArrays(parsedInput).map(x => getRockArrayValue(x)).flat().reduce((a, b) => a + b, 0)
