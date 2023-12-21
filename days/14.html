@@ -17,6 +17,23 @@
     <h2>1</h2>
     <input id="fancyAnswer2" disabled></input>
 
+    <textarea id="blah" rows="11" cols="11">O....#....
+O.OO#....#
+.....##...
+OO.#O....O
+.O.....O#.
+O.#..O.#.#
+..O..#O..O
+.......O..
+#....###..
+#OO..#....</textarea>
+
+    <button onclick="blah.value = moveAllRocksNorthArrayOfArrays(blah.value.split('\n').map(y => y.split(''))).map(x => x.join('')).join('\n')">Tilt North</button>
+    <button onclick="blah.value = moveAllRocksWestArrayOfArrays(blah.value.split('\n').map(y => y.split(''))).map(x => x.join('')).join('\n')">Tilt West</button>
+    <button onclick="blah.value = moveAllRocksSouthArrayOfArrays(blah.value.split('\n').map(y => y.split(''))).map(x => x.join('')).join('\n')">Tilt South</button>
+    <button onclick="blah.value = moveAllRocksEastArrayOfArrays(blah.value.split('\n').map(y => y.split(''))).map(x => x.join('')).join('\n')">Tilt East</button>
+    
+
 </body>
 <script>
     'use strict'
@@ -141,7 +158,17 @@ O#O..O...O.O....OO.....##O.....OOO..OO.....#O...OO.#....#.O.......#.#.........#O
         return rotateListOfLists(input.split("\n").map(x => x.split(""))).map(x => x.reverse())
     }
 
+    // https://stackoverflow.com/a/46805290
+    function transpose(matrix) {
+        return matrix.reduce((prev, next) => next.map((item, i) =>
+            (prev[i] || []).concat(next[i])
+        ), []);
+    }
+
     function rotateListOfLists(input) {
+        `
+        Clockwise
+        `
         var returnList = []
         var inputWidth = input[0].length
         var inputHeight = input.length
@@ -154,24 +181,10 @@ O#O..O...O.O....OO.....##O.....OOO..OO.....#O...OO.#....#.O.......#.#.........#O
             }
             returnList.push(tempCol)
         }
+
         return returnList
     }
 
-    function rotateListOfListsTheOtherWay(input) {
-        var returnList = []
-        var inputWidth = input[0].length
-        var inputHeight = input.length
-
-        for (var i = 0; i < inputWidth; i++) {
-            var tempCol = []
-            // for (var j = (inputHeight - 1); j >= 0; j--) {
-            for (var j = 0; j < inputHeight; j++) {
-                tempCol.push(input[j][i])
-            }
-            returnList.push(tempCol)
-        }
-        return returnList
-    }
 
     function moveRocksNorthInArray(inputArray) {
         `
@@ -207,6 +220,10 @@ O#O..O...O.O....OO.....##O.....OOO..OO.....#O...OO.#....#.O.......#.#.........#O
         return returnArray
     }
 
+    function moveRocksSouthInArray(inputArray) {
+        return moveRocksNorthInArray(inputArray.reverse()).reverse()
+    }
+
     function getRockArrayValue(inputArray) {
         return inputArray.reverse().map((x, i) => x == "O" ? i + 1 : 0)
     }
@@ -215,72 +232,35 @@ O#O..O...O.O....OO.....##O.....OOO..OO.....#O...OO.#....#.O.......#.#.........#O
         return inputArrayOfArrays.map(x => moveRocksNorthInArray(x))
     }
 
+    function moveAllRocksSouthArrayOfArrays(inputArrayOfArrays) {
+        return inputArrayOfArrays.map(x => moveRocksSouthInArray(x))
+    }
+
+    function moveAllRocksEastArrayOfArrays(inputArrayOfArrays) {
+        return transpose(moveAllRocksNorthArrayOfArrays(transpose(inputArrayOfArrays)))
+    }
+
+    function moveAllRocksWestArrayOfArrays(inputArrayOfArrays) {
+        return transpose(moveAllRocksSouthArrayOfArrays(transpose(inputArrayOfArrays)))
+    }
+
+
     function cycleRocks(inputArrayOfArrays) {
-        var tempArrayOfArrays = [...inputArrayOfArrays]
-        // console.log(rotateListOfListsTheOtherWay(tempArrayOfArrays).map(x => x.join("")).join("\n"), "input")
+        var tempArrayOfArrays = JSON.parse(JSON.stringify(inputArrayOfArrays))
 
         // tilt north
         tempArrayOfArrays = moveAllRocksNorthArrayOfArrays(tempArrayOfArrays)
-        // console.log(rotateListOfListsTheOtherWay(tempArrayOfArrays).map(x => x.join("")).join("\n"), "tilt north")
-        // rotate and tilt west
-        tempArrayOfArrays = moveAllRocksNorthArrayOfArrays(rotateListOfListsTheOtherWay(tempArrayOfArrays))
-        // console.log(
-        //     ((tempArrayOfArrays)).map(x => x.join("")).join("\n"),
-        //     "tilt west"
-        // )
-        // rotate and tilt south
-        tempArrayOfArrays = moveAllRocksNorthArrayOfArrays(rotateListOfLists(tempArrayOfArrays))
-        // console.log(
-        //     rotateListOfLists(rotateListOfLists(rotateListOfLists(rotateListOfLists(rotateListOfListsTheOtherWay(rotateListOfLists(rotateListOfListsTheOtherWay(tempArrayOfArrays))))))).map(x => x.join("")).join("\n"),
-        //     "tilt south"
-        // )
-        // rotate and tilt east
-        tempArrayOfArrays = moveAllRocksNorthArrayOfArrays(rotateListOfLists(tempArrayOfArrays))
-        // console.log(
-        //     rotateListOfLists(rotateListOfLists(tempArrayOfArrays)).map(x => x.join("")).join("\n"),
-        //     "tilt east"
-        // )
-        // go back to north but don't tilt
-        tempArrayOfArrays = rotateListOfLists(tempArrayOfArrays)
-        // console.log(
-        //     rotateListOfLists(tempArrayOfArrays).map(x => x.join("")).join("\n"),
-        //     "rotate back to north"
-        // )
+        // tilt west
+        tempArrayOfArrays = moveAllRocksWestArrayOfArrays(tempArrayOfArrays)
+        // tilt south
+        tempArrayOfArrays = moveAllRocksSouthArrayOfArrays(tempArrayOfArrays)
+        // tilt east
+        tempArrayOfArrays = moveAllRocksEastArrayOfArrays(tempArrayOfArrays)
 
         return tempArrayOfArrays
     }
 
-    function cycleTillRepeat(inputArrayOfArrays) {
-        var seenStates = new Set()
-        var tempArrayOfArrays = [...inputArrayOfArrays]
-        var iterationCount = 0
-        
-        // find the first point where we enter a cycle
-        while (true) {
-            iterationCount++
-            var arrayHash = JSON.stringify(tempArrayOfArrays)
-            if (!seenStates.has(arrayHash)) {
-                seenStates.add(arrayHash)
-                tempArrayOfArrays = cycleRocks(tempArrayOfArrays)
-                continue
-            }
-            else {
-                console.log("stable state found after", iterationCount, "iterations")
-                break
-            }
-        }
-        return [tempArrayOfArrays, iterationCount]
-    }
 
-    function recursiveCycleTillRepeat(inputArrayOfArrays, iterations){
-        var nextCycle = cycleTillRepeat(inputArrayOfArrays)
-        if (nextCycle[1] == iterations){
-            return nextCycle
-        }
-        else{
-            return recursiveCycleTillRepeat(nextCycle[0], nextCycle[1])
-        }
-    }
 
     function test() {
         var iterationsToEnterCycle = cycleTillRepeat(parsedInput)[1]
@@ -292,21 +272,39 @@ O#O..O...O.O....OO.....##O.....OOO..OO.....#O...OO.#....#.O.......#.#.........#O
         // 1,000,000,000 = iterationsToEnterCycle + stableStateLoops
         var n = (1000000000 - iterationsToEnterCycle) % cycleLength
 
-        if (!n){
+        if (!n) {
             // do nothing
         }
-        else{
-            for (var i=0; i<n; i++){
+        else {
+            for (var i = 0; i < n; i++) {
                 console.log("cycling", i)
                 returnArrayOfArrays = cycleRocks(returnArrayOfArrays)
             }
         }
-        return returnArrayOfArrays.map(x => getRockArrayValue(x)).flat().reduce((a, b) => a + b, 0)
+        return getLoadSum(returnArrayOfArrays)
+    }
+
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+    async function stupidRocks() {
+        var tempRocks = JSON.parse(JSON.stringify(parsedInput))
+        var counter = 0
+        while (counter < 1000) {
+            tempRocks = cycleRocks(tempRocks)
+            displayStupidRocks(tempRocks)
+            counter++
+            await sleep(2000)
+            console.log(counter)
+        }
+    }
+
+    function getLoadSum(inputArrayOfArrays) {
+        return inputArrayOfArrays.map(x => getRockArrayValue(x)).flat().reduce((a, b) => a + b, 0)
     }
 
 
     function solvePuzzle() {
-        return moveAllRocksNorthArrayOfArrays(parsedInput).map(x => getRockArrayValue(x)).flat().reduce((a, b) => a + b, 0)
+        return getLoadSum(moveAllRocksNorthArrayOfArrays([...parsedInput]))
     }
 
 
