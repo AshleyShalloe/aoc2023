@@ -59,14 +59,17 @@
         .activatedCell {
             background: rgb(255, 255, 187) !important;
         }
+        button{
+            margin: 5px;
+        }
     </style>
 </head>
 
 <body>
 
-    <h2>1</h2>
+    <h2>This one is okay actually</h2>
     <input id="fancyAnswer1" disabled></input>
-    <h2>2</h2>
+    <h2>Maybe open up the console to view progress for this one</h2>
     <input id="fancyAnswer2" disabled></input>
 
 </body>
@@ -349,8 +352,55 @@
         document.getElementById("fancyAnswer1").value = theTable.getElementsByClassName("activatedCell").length
     }
 
+    function solveNoSlowdown(){
+        while (tableNextStep()) {
+            continue
+        }
+        return theTable.getElementsByClassName("activatedCell").length
+    }
+
     function bruteForcePt2(){
-        wavefrontArray = [{"col": -1, "row": 0, "direction": "east"}]
+        var startingPointRecordsArray = []
+        var maxTilesEnergised = 0
+
+        // south beam from the north
+        for (var i=0; i<tableWidth; i++){
+            startingPointRecordsArray.push([{"col": i, "row": -1, "direction": "south"}])
+        }
+        // north beam from the south
+        for (var i=0; i<tableWidth; i++){
+            startingPointRecordsArray.push([{"col": i, "row": tableHeight, "direction": "north"}])
+        }
+        // east beam from the west
+        for (var i=0; i<tableHeight; i++){
+            startingPointRecordsArray.push([{"col": -1, "row": i, "direction": "east"}])
+        }
+        // west beam from the east
+        for (var i=0; i<tableHeight; i++){
+            startingPointRecordsArray.push([{"col": tableWidth, "row": i, "direction": "west"}])
+        }
+        
+        for (var i=0; i<startingPointRecordsArray.length; i++){
+            console.log("Iteration", i+1, "of", startingPointRecordsArray.length)
+            var tempStartingPoint = startingPointRecordsArray[i]
+            resetTable()
+            initialCellInitDone = true
+            wavefrontArray = tempStartingPoint
+            var tilesEnergised = solveNoSlowdown()
+            if (tilesEnergised > maxTilesEnergised){
+                console.log("New max", tilesEnergised)
+                maxTilesEnergised = tilesEnergised
+            }
+        }
+
+        return maxTilesEnergised
+    }
+
+    function resetTable(){
+        [...theTable.getElementsByClassName("activatedCell")].forEach(x => {
+            x.classList.remove("activatedCell")
+            x.innerHTML = ""
+        })
     }
 
     function solvePuzzle() {
@@ -359,7 +409,7 @@
 
 
     function solvePuzzlePt2() {
-        return 0
+        return "Click Solve pt2"
     }
 
     function initFirstCell(){
@@ -379,8 +429,14 @@
         // solve pt1 button
         var btnElm = document.createElement("button")
         btnElm.id = "solvePt1"
-        btnElm.onclick = doSolvePt1
+        btnElm.onclick = function(){resetTable(); doSolvePt1()}
         btnElm.innerHTML = "Solve pt1"
+        document.body.appendChild(btnElm)
+        // solve pt2 button
+        var btnElm = document.createElement("button")
+        btnElm.id = "solvePt2"
+        btnElm.onclick = function(){document.getElementById("fancyAnswer2").value = bruteForcePt2()}
+        btnElm.innerHTML = "Solve pt2"
         document.body.appendChild(btnElm)
 
         document.getElementById("fancyAnswer1").value = solvePuzzle().toString()
