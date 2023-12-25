@@ -73,20 +73,17 @@
 <script>
     'use strict'
 
-//     const testInput = String.raw`.|...\....
-// |.-.\.....
-// .....|-...
-// ........|.
-// ..........
-// .........\
-// ..../.\\..
-// .-.-/..|..
-// .|....-|.\
-// ..//.|....`
+    const testInput = String.raw`.|...\....
+|.-.\.....
+.....|-...
+........|.
+..........
+.........\
+..../.\\..
+.-.-/..|..
+.|....-|.\
+..//.|....`
 
-const testInput = String.raw`..|..
-.....
-..-..`
 
 
     const puzzleInput = String.raw`\...\..........|..\........../...............................\.\.....................................-........
@@ -352,6 +349,10 @@ const testInput = String.raw`..|..
         document.getElementById("fancyAnswer1").value = theTable.getElementsByClassName("activatedCell").length
     }
 
+    function bruteForcePt2(){
+        wavefrontArray = [{"col": -1, "row": 0, "direction": "east"}]
+    }
+
     function solvePuzzle() {
         return "Click Solve pt1"
     }
@@ -362,52 +363,7 @@ const testInput = String.raw`..|..
     }
 
     function initFirstCell(){
-        var firstCellElm = theTable.rows[0].cells[0]
-        var arrayValue = parsedInput[0][0]
-
-        firstCellElm.classList.add("activatedCell")
-
-        if (arrayValue == "."){
-            firstCellElm.innerHTML = "►"
-            wavefrontArray = [{ "col": 0, "row": 0, "direction": "east" }]
-            return
-        }
-        else{
-            var annoyingFirstCellObj = symbolLookup[parsedInput[0][0]]
-            // we're approaching from the west
-            if (annoyingFirstCellObj == "verticalSplitter"){
-                // can ignore the north beam
-                wavefrontArray = [{ "col": 0, "row": 1, "direction": "south" }]
-                var targetCell = theTable.rows[1].cells[0]
-                targetCell.classList.add("activatedCell")
-                targetCell.innerHTML += directionToArrowLookup["south"]
-                firstCellElm.innerHTML = directionToArrowLookup["north"] + directionToArrowLookup["south"]
-            }
-            else if (annoyingFirstCellObj == "horizontalSplitter"){
-                // straight through
-                wavefrontArray = [{ "col": 1, "row": 0, "direction": "east" }]
-                var targetCell = theTable.rows[0].cells[1]
-                targetCell.classList.add("activatedCell")
-                targetCell.innerHTML += directionToArrowLookup["east"]
-                firstCellElm.innerHTML = directionToArrowLookup["east"]
-            }
-            else if (annoyingFirstCellObj == "neswMirror"){
-                // won't this just bounce into oblivion?
-                wavefrontArray = []
-                firstCellElm.innerHTML = directionToArrowLookup["north"]
-            }
-            else if (annoyingFirstCellObj == "nwseMirror"){
-                // send it down
-                wavefrontArray = [{ "col": 0, "row": 1, "direction": "south" }]
-                var targetCell = theTable.rows[1].cells[0]
-                targetCell.classList.add("activatedCell")
-                targetCell.innerHTML += directionToArrowLookup["south"]
-                firstCellElm.innerHTML = directionToArrowLookup["south"]
-            }
-            else{
-                console.error("unreachable")
-            }
-        }
+        wavefrontArray = [{"col": -1, "row": 0, "direction": "east"}]
     }
 
     function init() {
