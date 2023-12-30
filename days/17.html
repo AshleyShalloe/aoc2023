@@ -58,8 +58,6 @@
 2546548887735
 4322674655533`
 
-
-
     const puzzleInput = ``
 
     async function go(){
@@ -70,6 +68,8 @@
         var currentStraightLineDistanceTravelled = 0
         var destinationNode = `${inputWidth-1},${inputHeight-1}`
         var nodeParentsObj = {}
+
+        theGrid.rows[0].cells[0].classList.add("visited")
         
         // init univisitedNodes
         for (var i=0; i<inputHeight; i++){
@@ -86,13 +86,14 @@
             // consider unvisited neighbours of current node
             // calculate their tentative distances
             // var tempNeighbours = [...generateNeighbourSet(currentNode).intersection(unvisitedNodes)]
-            var tempNeighbours = [...setIntersection(generateNeighbourSet(currentNode), unvisitedNodes)]
+            var tempNeighbours = [...setIntersection(generateNeighbourSet(currentNode, nodeParentsObj), unvisitedNodes)]
+            var bannedCoords = getBannedCoords(currentNode, nodeParentsObj)
+            
             for (var i=0; i<tempNeighbours.length; i++){
                 var [tempCol, tempRow] = tempNeighbours[i].split(",").map(x => parseInt(x))
                 var currentlyAssignedDistance = parsedInput[tempRow][tempCol]
                 var tentativeDistance = tentativeDistancesObj[currentNode] + currentlyAssignedDistance
-                // tentativeDistancesObj[[tempCol, tempRow].toString()] = Math.min(currentlyAssignedDistance, tentativeDistance)
-                
+
                 if (tentativeDistance < tentativeDistancesObj[tempNeighbours[i]]){
                     tentativeDistancesObj[[tempCol, tempRow].toString()] = tentativeDistance
                     nodeParentsObj[[tempCol, tempRow].toString()] = currentNode
@@ -101,7 +102,7 @@
 
                 theGrid.rows[tempRow].cells[tempCol].classList.add("checked")
                 
-                await sleep(50)
+                await sleep(10)
             }
 
             // mark current node as visited by
@@ -109,7 +110,7 @@
             unvisitedNodes.delete(currentNode)
 
             // select unvisited node with smallest tentative distance
-            currentNode = getUnvisitedNodeWithSmallestTentativeDistance(unvisitedNodes, tentativeDistancesObj)
+            currentNode = getUnvisitedNodeWithSmallestTentativeDistance(unvisitedNodes, tentativeDistancesObj, bannedCoords)
             theGrid.rows[tempRow].cells[tempCol].classList.add("visited")
             console.log(currentNode)
             if (currentNode == destinationNode){
@@ -133,6 +134,11 @@
 
             currentNode = inputObj[currentNode]
         }
+
+        var [currentCol, currentRow] = [0,0]
+            var targetElm =  theGrid.rows[currentRow].cells[currentCol]
+            targetElm.classList.remove("visited", "checked")
+            targetElm.classList.add("theWay")
     }
 
     const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -150,8 +156,11 @@
         return intersection
     }
 
-    function getUnvisitedNodeWithSmallestTentativeDistance(unvisitedSet, tentativeObj){
+    function getUnvisitedNodeWithSmallestTentativeDistance(unvisitedSet, tentativeObj, bannedCoords){
         var tempList = [...unvisitedSet]
+        if (bannedCoords){
+            tempList = tempList.filter(x => x != bannedCoords)
+        }
         var smallestTDSeen = Infinity
         var returnNode = tempList[0] // init
 
@@ -168,10 +177,69 @@
         return returnNode
     }
 
-    function generateNeighbourSet(inputCoordsString){
+    function getLastThreeNodes(inputCoordsString, parentNodesObj){
+        var returnArray = []
+        var tempCoords = inputCoordsString
+        while (returnArray.length < 3){
+            try{
+                tempCoords = parentNodesObj[tempCoords]
+                returnArray.push(tempCoords)
+            }
+            catch{
+                continue
+            }
+        }
+        return returnArray.filter(x => x)
+    }
+
+    function getBannedDirection(inputCoordsString, parentNodesObj){
+        var col = parseInt(inputCoordsString.split(",")[0])
+        var row = parseInt(inputCoordsString.split(",")[1])
+        var last3Nodes = getLastThreeNodes(inputCoordsString, parentNodesObj)
+        var sameRow = (new Set(last3Nodes.map(x => x.split(",")[1]))).size == 1
+        var sameCol = (new Set(last3Nodes.map(x => x.split(",")[0]))).size == 1
+        var sameRowDirection
+        var sameColDirection
+        var bannedDirection
+        if (last3Nodes.length < 3){
+            sameRow = false
+            sameCol = false
+        }
+        if (sameRow){
+            sameRowDirection = parseInt(last3Nodes[0].split(",")[0]) - col // if negative, ban west else east
+            bannedDirection = sameRowDirection < 0 ? "west" : "east"
+        }
+        if (sameCol){
+            sameColDirection = parseInt(last3Nodes[0].split(",")[1]) - row // if negative, ban north else south
+            bannedDirection = sameColDirection < 0 ? "north" : "south"
+        }
+
+        return bannedDirection
+    }
+
+    function getBannedCoords(inputCoordsString, parentNodesObj){
+        var bannedDirection = getBannedDirection(inputCoordsString, parentNodesObj)
+        var col = parseInt(inputCoordsString.split(",")[0])
+        var row = parseInt(inputCoordsString.split(",")[1])
+        if (bannedDirection == "west"){
+            return [col+1,row].toString()
+        }
+        if (bannedDirection == "east"){
+            return [col-1,row].toString()
+        }
+        if (bannedDirection == "south"){
+            return [col,row-1].toString()
+        }
+        if (bannedDirection == "north"){
+            return [col,row+1].toString()
+        }
+    }
+
+    function generateNeighbourSet(inputCoordsString, parentNodesObj){
         var col = parseInt(inputCoordsString.split(",")[0])
         var row = parseInt(inputCoordsString.split(",")[1])
         var returnSet = new Set()
+        var bannedCoords = getBannedCoords(inputCoordsString, parentNodesObj)
 
         // north
         if (row > 0){
@@ -192,6 +260,8 @@
         if (col > 0){
             returnSet.add([col=1, row].toString())
         }
+
+        returnSet = new Set([...returnSet].filter(x => x != bannedCoords))
 
         return returnSet
     }
