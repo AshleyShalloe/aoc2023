@@ -8,27 +8,210 @@
     <script type="text/javascript" src="../res/main.js"></script>
     <title>Advent of Code // Day 17</title>
     <link rel="icon" href="../favicon.png" />
+    <style>
+        #theGrid, #theGrid td, #theGrid tr{
+            border: 1px solid white;
+            border-collapse: collapse;
+        }
+        #theGrid{
+            margin: 30px;
+        }
+        #theGrid td.theWay{
+            background: yellow !important;
+        }
+        #theGrid td.visited{
+            background: green !important;
+        }
+        #theGrid td.checked{
+            background: purple;
+        }
+        #theGrid td{
+            width: 2em;
+            height: 2em;
+            font-size: 0.7em;
+        }
+    </style>
 </head>
 
 <body>
 
-    <h2>This one is okay actually</h2>
+    <h2>1</h2>
     <input id="fancyAnswer1" disabled></input>
-    <h2>Maybe open up the console to view progress for this one</h2>
+    <h2>2</h2>
     <input id="fancyAnswer2" disabled></input>
 
 </body>
 <script>
     'use strict'
 
-    const testInput = ``
+    const testInput = `2413432311323
+3215453535623
+3255245654254
+3446585845452
+4546657867536
+1438598798454
+4457876987766
+3637877979653
+4654967986887
+4564679986453
+1224686865563
+2546548887735
+4322674655533`
 
 
 
     const puzzleInput = ``
 
+    async function go(){
+        // https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
+        var unvisitedNodes = new Set()
+        var tentativeDistancesObj = {}
+        var currentNode = "0,0"
+        var currentStraightLineDistanceTravelled = 0
+        var destinationNode = `${inputWidth-1},${inputHeight-1}`
+        var nodeParentsObj = {}
+        
+        // init univisitedNodes
+        for (var i=0; i<inputHeight; i++){
+            for (var j=0; j<inputWidth; j++){
+                unvisitedNodes.add([j,i].toString())
+            }
+        }
+
+        // init tentative distances
+        unvisitedNodes.forEach(x => tentativeDistancesObj[x] = Infinity)
+        tentativeDistancesObj["0,0"] = 0
+
+        while (true){
+            // consider unvisited neighbours of current node
+            // calculate their tentative distances
+            // var tempNeighbours = [...generateNeighbourSet(currentNode).intersection(unvisitedNodes)]
+            var tempNeighbours = [...setIntersection(generateNeighbourSet(currentNode), unvisitedNodes)]
+            for (var i=0; i<tempNeighbours.length; i++){
+                var [tempCol, tempRow] = tempNeighbours[i].split(",").map(x => parseInt(x))
+                var currentlyAssignedDistance = parsedInput[tempRow][tempCol]
+                var tentativeDistance = tentativeDistancesObj[currentNode] + currentlyAssignedDistance
+                // tentativeDistancesObj[[tempCol, tempRow].toString()] = Math.min(currentlyAssignedDistance, tentativeDistance)
+                
+                if (tentativeDistance < tentativeDistancesObj[tempNeighbours[i]]){
+                    tentativeDistancesObj[[tempCol, tempRow].toString()] = tentativeDistance
+                    nodeParentsObj[[tempCol, tempRow].toString()] = currentNode
+                    theGrid.rows[tempRow].cells[tempCol].innerHTML = tentativeDistance
+                }
+
+                theGrid.rows[tempRow].cells[tempCol].classList.add("checked")
+                
+                await sleep(50)
+            }
+
+            // mark current node as visited by
+            // removing from univisited set
+            unvisitedNodes.delete(currentNode)
+
+            // select unvisited node with smallest tentative distance
+            currentNode = getUnvisitedNodeWithSmallestTentativeDistance(unvisitedNodes, tentativeDistancesObj)
+            theGrid.rows[tempRow].cells[tempCol].classList.add("visited")
+            console.log(currentNode)
+            if (currentNode == destinationNode){
+                console.log("done, apparently")
+                highlightParentSteps(nodeParentsObj)
+                return
+            }
+        }
+    }
+
+    function highlightParentSteps(inputObj){
+        var destinationNode = [inputWidth-1, inputHeight-1].toString()
+        var originNode = [0,0].toString()
+        var currentNode = destinationNode
+
+        while (currentNode != originNode){
+            var [currentCol, currentRow] = currentNode.split(",").map(x => parseInt(x))
+            var targetElm =  theGrid.rows[currentRow].cells[currentCol]
+            targetElm.classList.remove("visited", "checked")
+            targetElm.classList.add("theWay")
+
+            currentNode = inputObj[currentNode]
+        }
+    }
+
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+    function setIntersection(setA, setB){
+        var intersection = new Set()
+        var setAArray = [...setA]
+        
+        for (var i=0; i<setAArray.length; i++){
+            if (setB.has(setAArray[i])){
+                intersection.add(setAArray[i])
+            }
+        }
+
+        return intersection
+    }
+
+    function getUnvisitedNodeWithSmallestTentativeDistance(unvisitedSet, tentativeObj){
+        var tempList = [...unvisitedSet]
+        var smallestTDSeen = Infinity
+        var returnNode = tempList[0] // init
+
+        for (var i=0; i<tempList.length; i++){
+            var tempNode = tempList[i]
+            var td = tentativeObj[tempNode]
+            
+            if (td < smallestTDSeen){
+                smallestTDSeen = td
+                returnNode = tempNode
+            }
+        }
+
+        return returnNode
+    }
+
+    function generateNeighbourSet(inputCoordsString){
+        var col = parseInt(inputCoordsString.split(",")[0])
+        var row = parseInt(inputCoordsString.split(",")[1])
+        var returnSet = new Set()
+
+        // north
+        if (row > 0){
+            returnSet.add([col, row-1].toString())
+        }
+
+        // south
+        if (row < (inputHeight - 1)){
+            returnSet.add([col, row+1].toString())
+        }
+
+        // east
+        if (col < (inputWidth - 1)){
+            returnSet.add([col+1, row].toString())
+        }
+
+        // west
+        if (col > 0){
+            returnSet.add([col=1, row].toString())
+        }
+
+        return returnSet
+    }
+
+    function initTable(){
+        var tableHTML = ""
+        for (var i=0; i<inputHeight; i++){
+            tableHTML += "<tr>" + parsedInput[i].map(x => `<td>${x}</td>`).join("") + "</tr>"
+        }
+        
+        var tableElm = document.createElement("table")
+        tableElm.id = "theGrid"
+        tableElm.innerHTML = tableHTML
+        document.body.appendChild(tableElm)
+
+        theGrid = document.getElementById("theGrid")
+    }
+
     function parseInput(inputString) {
-        return 
+        return inputString.split("\n").map(x => x.split("").map(y => parseInt(y)))
     }
 
     function solvePuzzle() {
@@ -42,6 +225,7 @@
 
 
     function init() {
+        initTable()
         document.getElementById("fancyAnswer1").value = solvePuzzle().toString()
         document.getElementById("fancyAnswer2").value = solvePuzzlePt2().toString()
     }
@@ -49,6 +233,9 @@
     // globals
     const testing = true
     const parsedInput = testing ? parseInput(testInput) : parseInput(puzzleInput)
+    var inputWidth = parsedInput[0].length
+    var inputHeight = parsedInput.length
+    var theGrid
 
     init();
 </script>
